@@ -25,7 +25,7 @@ class TelnetConnect {
 	// Retourne 0 si ok, sinon -1 
 	*************************************************/
 	
-	static public function linkTo($host,$objMiniPaviC,$echo='off',$case='lower') {
+	static public function linkTo($host,$objMiniPaviC,$echo='off',$case='lower',$startSeq='') {
 		$serverSocket = @stream_socket_client('tcp://'.$host, $errno, $errstr, 5);
 		if (!$serverSocket) {
 			trigger_error("[MiniPavi-TelnetConnect] Connexion à $host en echec");
@@ -34,6 +34,11 @@ class TelnetConnect {
 		stream_set_blocking($serverSocket, true);
 		stream_set_timeout($serverSocket,0, 500000);
 		trigger_error("[MiniPavi-TelnetConnect] Connexion à $host OK");
+
+		if (strlen($startSeq)>0) {
+			trigger_error("[MiniPavi-TelnetConnect] Envoi [$startSeq] ");
+			@fwrite($serverSocket,$startSeq);
+		}
 
 		$userBuff='';
 		$serverBuff='';
