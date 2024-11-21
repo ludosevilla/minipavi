@@ -50,6 +50,7 @@ function getInfos($id,&$key,&$tInfos) {
 						$tInfos['host'] = (string)@$objSer->host;
 						$tInfos['echo'] = (string)@$objSer->echo;
 						$tInfos['case'] = (string)@$objSer->case;
+						$tInfos['startseq'] = (string)@$objSer->startseq;
 						return true;
 					} else if (@$objSer['type'] == 'ws') {
 						$tInfos['type'] = 'ws';
@@ -246,7 +247,7 @@ try {
 					$cmd=MiniPavi\MiniPaviCli::createConnectToExtCmd($tInfos['numero'],$tInfos['rx'],$tInfos['tx'],$key);
 				} else if ($tInfos['type']=='int' || $tInfos['type']=='ws') {
 					if ($tInfos['type']=='int')
-						$cmd=MiniPavi\MiniPaviCli::createConnectToTlnCmd($tInfos['host'],$tInfos['echo'],$tInfos['case'],$key);
+						$cmd=MiniPavi\MiniPaviCli::createConnectToTlnCmd($tInfos['host'],$tInfos['echo'],$tInfos['case'],$tInfos['startseq'],$key);
 					else $cmd=MiniPavi\MiniPaviCli::createConnectToWsCmd($tInfos['host'],$tInfos['path'],$tInfos['echo'],$tInfos['case'],$tInfos['proto'],$key);
 				} 
 				$step = 10;
