@@ -450,10 +450,11 @@ class MiniPaviCli {
 	// Demande la connexion a un serveur par telnet
 	// à l'adresse indiquée
 	// host: adresse ex: 1.2.3.4:23
+	// startSeq: séquence à envoyer au serveur à la connexion
 	// key: Clé d'autorisation pour connexions sortantes
 	**************************************************/
 
-	static function createConnectToTlnCmd($host,$echo='off',$case='lower',$key='') {
+	static function createConnectToTlnCmd($host,$echo='off',$case='lower',$startSeq='',$key='') {
 		$host = trim($host);
 		if ($host == '')
 			return false;
@@ -468,6 +469,7 @@ class MiniPaviCli {
 			$case ='lower';
 		$cmd['COMMAND']['param']['echo'] = $echo;		
 		$cmd['COMMAND']['param']['case'] = $case;		
+		$cmd['COMMAND']['param']['startseq'] = $startSeq;	
 		
 		return $cmd;
 	}
