@@ -62,21 +62,16 @@ class MiniPavi {
 
 
 	const VDT_PRO1_VER = "\x1B\x39\x7B";
-	const VDT_GET_POSCUR = "\x1B\x61";
 	const VDT_PRO2_NOACK_MODEM = "\x1B\x3A\x64\x52";
 	const VDT_PRO2_NOACK_PRISE = "\x1B\x3A\x64\x53";
 	const VDT_PRO2_NOACK_ECRAN = "\x1B\x3A\x64\x50";
 	const VDT_PRO2_NOACK_CLAVIER = "\x1B\x3A\x64\x51";
-	
 	const VDT_PRO3_ECHO_OFF = "\x1B\x3B\x60\x58\x52";
 	const VDT_PRO3_ECHO_ON = "\x1B\x3B\x61\x58\x52";
-	
 	const VDT_PRO2_ROULEAU_ON = "\x1B\x3A\x69\x43";
 	const VDT_PRO2_ROULEAU_OFF = "\x1B\x3A\x6A\x43";
 	const VDT_PRO2_MINUSCULES_ON = "\x1B\x3A\x69\x45";
 	const VDT_PRO2_MINUSCULES_OFF = "\x1B\x3A\x6A\x45";
-	const VDT_RESET_DRCS = "\x1B\x28\x40\x1B\x29\x63";
-
 
 	const FCT_SOMMAIRE = 70;
 	const FCT_ANNULATION = 69;
@@ -394,10 +389,9 @@ class MiniPavi {
 		curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type:application/json'));
 		if (@$elemUrl['port']!='')
 			curl_setopt($ch, CURLOPT_PORT, (int)$elemUrl['port']);
-
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true );
-		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10); 
-		curl_setopt($ch, CURLOPT_TIMEOUT, 20);
+		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 4); 
+		curl_setopt($ch, CURLOPT_TIMEOUT, 10);
 		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
 		curl_setopt($ch, CURLOPT_POSTREDIR , true);
 		curl_setopt($ch, CURLOPT_NOPROGRESS, 0);
@@ -416,16 +410,17 @@ class MiniPavi {
 		if ($result===false && ($curlErrNo == CURLE_OPERATION_TIMEDOUT || $curlErrNo == CURLE_OPERATION_TIMEOUTED)) {
 			trigger_error("[MiniPavi-class] Erreur curl=".curl_error($ch));
 			return false;
-		} else if ($result===false) {
-			trigger_error("[MiniPavi-class] Erreur curl=".curl_error($ch).' / Forçage XML');
+		} elseif ($result===false) {
+			trigger_error("[MiniPavi-class] Erreur curl=".curl_error($ch).' / Forçage XML sur '.$urlToCall);
 			$forceXml = true;
 			$ch = curl_init( $urlToCall );
-			curl_setopt($ch, CURLOPT_USERAGENT, 'MiniPAVI/'.PAVI_VER);
+			curl_setopt($ch, CURLOPT_USERAGENT, 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:132.0) Gecko/20100101 Firefox/132.0');
+			curl_setopt($ch, CURLOPT_HTTPHEADER, array('Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8','Connection: keep-alive'));
 			if (@$elemUrl['port']!='')
 				curl_setopt($ch, CURLOPT_PORT, (int)$elemUrl['port']);
 			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true );
-			curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10); 
-			curl_setopt($ch, CURLOPT_TIMEOUT, 20);
+			curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 4); 
+			curl_setopt($ch, CURLOPT_TIMEOUT, 10);
 			curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
 			curl_setopt($ch, CURLOPT_NOPROGRESS, 0);
 			curl_setopt($ch, CURLOPT_PROGRESSFUNCTION, array($this, 'curlCallback'));		
@@ -458,7 +453,7 @@ class MiniPavi {
 			}
 			
 		} else if ($forceXml) {
-			trigger_error("[MiniPavi-class] Contenu non-XML après forçage");
+			trigger_error("[MiniPavi-class] Contenu non-XML après forçage [$result]");
 			return false;
 		}
 		$this->serviceResult = $result;
@@ -1188,9 +1183,10 @@ class MiniPavi {
 		}
 		$echo = trim(@$objCommand->param->echo);				
 		$case = trim(@$objCommand->param->case);		
+		$startSeq = stripcslashes(trim(@$objCommand->param->startseq));		
 		
 		$this->sendToMainProc('setinfos',array('infos'=>"TELNETO $host"));
-		$r = TelnetConnect::linkTo($host,$this,$echo,$case);
+		$r = TelnetConnect::linkTo($host,$this,$echo,$case,$startSeq);
 		$this->sendToMainProc('setinfos',array('infos'=>''));
 		$this->tLastData=time();
 		return $r;
