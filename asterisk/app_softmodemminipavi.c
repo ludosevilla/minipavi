@@ -435,21 +435,21 @@ static int softmodemminipavi_communicate(modem_session *s)
 	
 	ast_log(LOG_NOTICE, "CONNECTED to remote host: '%s port %d'\n", s->host,s->port);
 	ast_autoservice_stop(s->chan);
-	// First, send a 3 seconds 2100Hz carrier + 75ms silence
-	ast_tonepair(s->chan, 2100, 2100, 3000, 500);	
-	usleep(75000);
-
-	fcntl(sock, F_SETFL, O_NONBLOCK);
+	
 
 	if (!strstr( s->callerinfo, "TO " )) {
 		// Call received
 		ast_log(LOG_NOTICE, ">Appel ENTRANT - CALLFROM %s (PCE=%d) STARTURL %s",s->callerinfo,s->pce,s->starturl);
+		// First, send a 3 seconds 2100Hz carrier + 75ms silence
+		ast_tonepair(s->chan, 2100, 2100, 3000, 500);	
+		usleep(75000);
 		sprintf(bufcid,"CALLFROM %s\nSTARTURL %s\nPCE %d\n",s->callerinfo,s->starturl,s->pce);	// Send caller number ans service url to Minipavi 
 	} else {
 		// Outbound call 
 		ast_log(LOG_NOTICE, ">Appel SORTANT");
 		sprintf(bufcid,"CALLTO %s\nPID %s\n\n",&s->callerinfo[3],s->starturl);	// Send called number and namle of local unix socket for communication with initiating process
 	}
+	fcntl(sock, F_SETFL, O_NONBLOCK);
 	send(sock, bufcid,strlen(bufcid), 0);		
 
 	state.answertone = -1; /* no carrier yet */
