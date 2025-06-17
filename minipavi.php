@@ -544,7 +544,7 @@ do {
 		
 		AbuseIPDB::check($ip,$objConfig->ipDBKey,$indice,$pays,$objConfig->ipBlackList,$objConfig->ipWhiteList);
 		trigger_error("[MiniPavi-Main] Vérification IP $ip idx=$indice [$pays]");
-		if ($indice>50) {
+		if ($indice>30) {
 			trigger_error("[MiniPavi-Main] AbuseIPDB: Connexion refusée");
 			$inCnx->close();
 			continue;
@@ -727,15 +727,18 @@ do {
 		switch ($objMiniPavi->inCnx->getTypeSocket()) {
 		case InCnx::WS_WEBSOCKET:
 			$objMiniPavi->log("***CNX*** WS from $ip UID=".$objMiniPavi->uniqueId);
-			$vdt.=MiniPavi::VDT_PRO2_NOACK_ECRAN.MiniPavi::VDT_PRO2_NOACK_MODEM.MiniPavi::VDT_PRO2_NOACK_PRISE.MiniPavi::VDT_PRO3_ECHO_OFF.MiniPavi::VDT_CLR.MiniPavi::VDT_G1.MiniPavi::VDT_POS.'@A'.'MiniPAVI '.PAVI_VER.'WS '.date('d/m/Y H:i').MiniPavi::VDT_CLRLN;
+			//$vdt.=MiniPavi::VDT_PRO2_NOACK_ECRAN.MiniPavi::VDT_PRO2_NOACK_MODEM.MiniPavi::VDT_PRO2_NOACK_PRISE.MiniPavi::VDT_PRO3_ECHO_OFF.MiniPavi::VDT_CLR.MiniPavi::VDT_G1.MiniPavi::VDT_POS.'@A'.'MiniPAVI '.PAVI_VER.'WS '.date('d/m/Y H:i').MiniPavi::VDT_CLRLN;
+			$vdt.=MiniPavi::VDT_CLR.MiniPavi::VDT_G1.MiniPavi::VDT_POS.'@A'.'MiniPAVI '.PAVI_VER.'WS '.date('d/m/Y H:i').MiniPavi::VDT_CLRLN;			
 			break;
 		case InCnx::WS_WEBSOCKETSSL:
 			$objMiniPavi->log("***CNX*** WSS from $ip UID=".$objMiniPavi->uniqueId);
-			$vdt.=MiniPavi::VDT_PRO2_NOACK_ECRAN.MiniPavi::VDT_PRO2_NOACK_MODEM.MiniPavi::VDT_PRO2_NOACK_PRISE.MiniPavi::VDT_PRO3_ECHO_OFF.MiniPavi::VDT_CLR.MiniPavi::VDT_G1.MiniPavi::VDT_POS.'@A'.'MiniPAVI '.PAVI_VER.'WSS '.date('d/m/Y H:i').MiniPavi::VDT_CLRLN;
+			//$vdt.=MiniPavi::VDT_PRO2_NOACK_ECRAN.MiniPavi::VDT_PRO2_NOACK_MODEM.MiniPavi::VDT_PRO2_NOACK_PRISE.MiniPavi::VDT_PRO3_ECHO_OFF.MiniPavi::VDT_CLR.MiniPavi::VDT_G1.MiniPavi::VDT_POS.'@A'.'MiniPAVI '.PAVI_VER.'WSS '.date('d/m/Y H:i').MiniPavi::VDT_CLRLN;
+			$vdt.=MiniPavi::VDT_CLR.MiniPavi::VDT_G1.MiniPavi::VDT_POS.'@A'.'MiniPAVI '.PAVI_VER.'WSS '.date('d/m/Y H:i').MiniPavi::VDT_CLRLN;						
 			break;
 		case InCnx::WS_TELNSOCKET:
 			$objMiniPavi->log("***CNX*** TELN from $ip UID=".$objMiniPavi->uniqueId);
-			$vdt.=MiniPavi::VDT_CLR.MiniPavi::VDT_G1.MiniPavi::VDT_POS.'@A'.'MiniPAVI '.PAVI_VER.'TELN '.date('d/m/Y H:i').MiniPavi::VDT_CLRLN;			
+			//$vdt.=MiniPavi::VDT_CLR.MiniPavi::VDT_G1.MiniPavi::VDT_POS.'@A'.'MiniPAVI '.PAVI_VER.'TELN '.date('d/m/Y H:i').MiniPavi::VDT_CLRLN;			
+			$vdt.=MiniPavi::VDT_CLR.MiniPavi::VDT_POS.'@A'.'MiniPAVI '.PAVI_VER.'TELN '.date('d/m/Y H:i').MiniPavi::VDT_CLRLN;			
 			break;
 		default:
 			if ($objMiniPavi->inCnx->pce->enabled) {
