@@ -1,7 +1,7 @@
 /**
  * @file webmedia.js
  * @author Jean-arthur SILVE <contact@minipavi.fr>
- * @version 1.0
+ * @version 1.1
  */
 
 var YTPlayer;
@@ -9,21 +9,23 @@ let intervalId = null;
 let isFetching = false; 
 let hasContentBeen1 = false;
 let instructionsRemoved = false;
+let lastEvent = '';
 
 function callMiniPaviWM(pinValue) {
+	
 	
 	// Ligne à modifier en indiquant l'adresse de votre passerelle (et port) 
 	
 	const url = 'https://mapasserelleminipavi.com:XXXX?action=webmedia';	
    
 	///////////////////////////////////////////////////////////////////////
-	
+
    
 	intervalId = setInterval(() => {
 		if (!isFetching) {
 			isFetching = true; // Active le verrou
-			const fullUrl = `${url}&pin=${encodeURIComponent(pinValue)}`;
-			
+			const fullUrl = `${url}&pin=${encodeURIComponent(pinValue)}&lastevent=${lastEvent}`;
+			lastEvent = '';
 			fetch(fullUrl)
 				.then(response => {
 					showLoader(false);
@@ -60,6 +62,7 @@ function handleApiResponse(data) {
 	const imgViewer = document.getElementById('imgViewer');
 	const linkButton = document.getElementById('linkButton');
 	const validateBtn = document.getElementById('validate-btn');
+	
 	
 	validateBtn.style.display='none';
 	if (data.result === 'KO') {
@@ -100,6 +103,8 @@ function handleApiResponse(data) {
 				stopDownloadButton();						
 				audioPlayer.src = data.infos;
 				audioPlayer.style.display = 'block';
+				audioPlayer.onended = function(){eventStopped();};
+				audioPlayer.onplaying = function(){eventPlaying();};
 				audioPlayer.play();
 			} else if (data.type === 'URL') {
 				stopYoutubePlayer();  
@@ -119,7 +124,8 @@ function handleApiResponse(data) {
 				youtubePlayer.style.display = 'block';
 				YTPlayer = new YT.Player('YTPlayer', {
 				events: {
-					'onReady': onPlayerReady
+					'onReady': onPlayerReady,
+					'onStateChange': onStateChange,
 				}
 				});
 
@@ -130,20 +136,43 @@ function handleApiResponse(data) {
 				stopDownloadButton();
 				videoPlayer.src = data.infos;
 				videoPlayer.style.display = 'block';
+				videoPlayer.onended = function(){eventStopped();};
+				videoPlayer.onplaying = function(){eventPlaying();};
 				videoPlayer.play();
 			}
 		} else if (data.content === '0' && !hasContentBeen1) {
-			contentMessage.innerHTML = 'Les contenus multimedia du service s\'afficheront ici.<br/><img src="images/pngegg.png" style="max-width: 100%;height: auto;display:block;"/>';
+			//contentMessage.innerText = 'Les contenus multimedia du service s\'afficheront ici.';
+			contentMessage.innerHTML = 'Les contenus multimedia du service s\'afficheront ici.<br/><img src="../images/pngegg.png" style="max-width: 100%;height: auto;display:block;"/>';
 			hasContentBeen1=true;
 		}
+
 		contentMessage.style.display = 'block';
 	}
 }
+
+function eventStopped() {
+	lastEvent = 'STOP';
+	console.log("Arret lecteur");
+}
+
+function eventPlaying() {
+	lastEvent = 'START';
+	console.log("Lecture");
+}
+
 
 function onPlayerReady(event) {
 	console.log('YT READY');
 	event.target.playVideo();
 }
+
+function onStateChange(event) {
+	if (event.data == 0)
+		eventStopped();
+	else if (event.data == 1)
+		eventPlaying();
+}
+
 
 function showLoader(show) {
 	const loaderAnim = document.getElementById('loader');
@@ -267,3 +296,4 @@ document.addEventListener('DOMContentLoaded', function() {
 		});
 	});
 });
+
