@@ -3,7 +3,7 @@
 /**
  * @file minipavi.php
  * @author Jean-arthur SILVE <contact@minipavi.fr>
- * @version 1.2 Novembre 2023 - Octobre 2024
+ * @version 1.2 Novembre 2023 - Juillet 2025
  *
  * MINI Point d'Accès VIdeotex
  * PHP 8.2 (CLI) version Unix
@@ -15,7 +15,7 @@
 mb_internal_encoding('utf-8');
 error_reporting(E_ERROR);
 
-define('PAVI_VER', '1.4');
+define('PAVI_VER', '1.5');
 
 define('CNX_TIMEOUT', 600);		// Période maximum d'inactivité avant deconnexion (secondes)(valeur par défaut)
 define('MAX_HISTO_CLIENT',30);	// Max historique clients (valeur par défaut)
