@@ -49,6 +49,10 @@ function visuWeb($visuSocket,$objMiniPaviM,$objConfig,$tObjClient,$tObjClientH,$
 		if (strlen($pin)!=4) {
 			return false;
 		}
+		if (isset($tGetParams['lastevent'])) {
+			$lastEvent = $tGetParams['lastevent'];
+		} else $lastEvent = '';
+		
 		$origin='';
 		foreach($recv as $hl) {
 			if(strpos($hl,'Origin: ') === 0) {
@@ -68,9 +72,10 @@ function visuWeb($visuSocket,$objMiniPaviM,$objConfig,$tObjClient,$tObjClientH,$
 		} else {
 			if ($o->objWebMedia->getRequest($type,$infos)) {
 				$tRep = array('result'=>'OK','content'=>'1','type'=>$type,'infos'=>$infos);
-				$o->sendToMainProc('shiftWebMedia',array('pid'=>$o->pid));
+				$o->sendToMainProc('shiftWebMedia',array('pid'=>$o->pid,'lastevent'=>$lastEvent));
 			} else {
 				$tRep = array('result'=>'OK','content'=>'0');
+				$o->sendToMainProc('pingWebMedia',array('pid'=>$o->pid,'lastevent'=>$lastEvent));
 			}
 		}
 		$body=json_encode($tRep);

@@ -22,6 +22,7 @@ class WebMedia {
 	
 	private $globalBuffer;
 	private $tRequests=array();
+	public $tPing=0;
 
 	public function parseDatas($datas) {
 		$regex = '/'.self::WEBMEDIA_START.'((?:.(?!'.self::WEBMEDIA_START.'))*)'.self::WEBMEDIA_STOP.'/';

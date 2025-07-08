@@ -373,6 +373,11 @@ class MiniPavi {
 		if (is_array($urlParams) && count($urlParams)>0)
 			$toSend['URLPARAMS']=$urlParams;
 		
+		
+		if ($this->objWebMedia->tPing+5<time())
+			$toSend['PAVI']['webmedia']=0;
+		else $toSend['PAVI']['webmedia']=1;
+		
 		$json = @json_encode($toSend);
 		if ($json === false) {
 			trigger_error('[MiniPavi-class] Erreur Encode json '.json_last_error(),E_USER_WARNING  );
@@ -456,7 +461,9 @@ class MiniPavi {
 			trigger_error("[MiniPavi-class] Contenu non-XML après forçage [$result]");
 			return false;
 		}
-		$this->serviceResult = $result;
+		if (trim($result)!='')
+			$this->serviceResult = $result;
+		else $this->serviceResult = null;
 		return true;
 	}
 
@@ -470,6 +477,12 @@ class MiniPavi {
 	function receiveFromUser($inDatas,&$fctn,$simulate=false) {
 		
 		if ($simulate) {
+			if (strpos($inDatas,'WMLASTEVENT/') === 0) {
+				//$this->buffer[0]='';
+				$lastEvent = substr($inDatas,12);
+				$fctn = 'BGCALL-WM-'.$lastEvent; // BGCALL-WM-STOP ou BGCALL-WM-START
+				return;
+			}
 			$this->buffer[0] = $inDatas;
 			$fctn = 'BGCALL-SIMU';
 			return;
@@ -760,8 +773,8 @@ class MiniPavi {
 		$extVdt='';
 		$returnVal = 1;		// Valeur "impossible"
 		$tExtCnxKeys=$objConfig->tExtCnxKeys;
-		$this->buffer=array();
-		$this->bufferIdx=0;
+		//$this->buffer=array();
+		//$this->bufferIdx=0;
 		try {
 			$rJson = json_decode($this->serviceResult,false,50,JSON_THROW_ON_ERROR);
 

@@ -46,6 +46,15 @@ function fatherIsCalling($signal)
 				$objMiniPavi->registerLocalSocket($sfTab['socket'],$socket,MiniPavi::MINIPAVI_SOCKETUSAGE_STREAMDUPL_TX);
 				trigger_error("[MiniPavi-Cli] Duplication activée");
 				break;				
+			case 'pingwebmedia': 
+				$objMiniPavi->objWebMedia->tPing=time();
+				//trigger_error("[MiniPavi-Cli] lastevent=".$sfTab['lastevent']);
+				if ($sfTab['lastevent']!='') {
+					$objMiniPavi->tSimulateUser['time']=time();
+					$objMiniPavi->tSimulateUser['datas']='WMLASTEVENT/'.$sfTab['lastevent'];
+				}
+				break;				
+				
 		}
 	}
 	
@@ -206,9 +215,36 @@ function childIsCalling($signal,$siginfo)
 
 				case 'shiftWebMedia': // supprime une demande de media web
 					$pid = $sfTab['pid']; 
+					$lastEvent = $sfTab['lastevent']; // STOP ou START ou vide
 					foreach($tObjClient as $objMiniPaviC) {
 						if ($objMiniPaviC->pid == $pid) {
 							$objMiniPaviC->objWebMedia->getRequest($null,$null);
+							$objMiniPaviC->objWebMedia->tPing=time();
+							
+							if ($objMiniPaviC->commSockets != null && isset($objMiniPaviC->commSockets[1])) {								
+								$sfTab = array();
+								$sfTab['command']='pingwebmedia';
+								$sfTab['lastevent']=$lastEvent;
+								@fwrite($objMiniPaviC->commSockets[1], serialize($sfTab)."\n");
+								posix_kill($objMiniPaviC->pid,SIGUSR1);
+							}
+							break;
+						}
+					}
+				break;
+
+				case 'pingWebMedia': 
+					$pid = $sfTab['pid']; 
+					$lastEvent = $sfTab['lastevent']; // STOP ou START ou vide
+					foreach($tObjClient as $objMiniPaviC) {
+						if ($objMiniPaviC->pid == $pid) {
+							if ($objMiniPaviC->commSockets != null && isset($objMiniPaviC->commSockets[1])) {								
+								$sfTab = array();
+								$sfTab['command']='pingwebmedia';
+								$sfTab['lastevent']=$lastEvent;
+								@fwrite($objMiniPaviC->commSockets[1], serialize($sfTab)."\n");
+								posix_kill($objMiniPaviC->pid,SIGUSR1);
+							}
 							break;
 						}
 					}
