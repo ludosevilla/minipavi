@@ -10,6 +10,7 @@ let isFetching = false;
 let hasContentBeen1 = false;
 let instructionsRemoved = false;
 let lastEvent = '';
+let YTready = false;
 
 function callMiniPaviWM(pinValue) {
 	
@@ -115,19 +116,25 @@ function handleApiResponse(data) {
 				linkButton.innerHTML = "Cliquez pour aller vers<br/><b>"+data.infos+"</b>";
 				linkButton.style.display = 'inline-block';
 			} else if (data.type === 'YT') {
-				stopAudioPlayer();
-				stopVideoPlayer();
-				stopImgViewer();				
-				stopDownloadButton();						
-				const youtubeUrl = `https://www.youtube.com/embed/${data.infos}?enablejsapi=1&rel=0`;
-				youtubePlayer.innerHTML = `<iframe id="YTPlayer" class="responsive-iframe" src="${youtubeUrl}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>`;
-				youtubePlayer.style.display = 'block';
-				YTPlayer = new YT.Player('YTPlayer', {
-				events: {
-					'onReady': onPlayerReady,
-					'onStateChange': onStateChange,
+				if (YTready) {
+					YTPlayer.loadVideoById(data.infos);
+					YTPlayer.playVideo();
+				} else {
+					YTready = false;
+					stopAudioPlayer();
+					stopVideoPlayer();
+					stopImgViewer();				
+					stopDownloadButton();						
+					const youtubeUrl = `https://www.youtube.com/embed/${data.infos}?enablejsapi=1&rel=0`;
+					youtubePlayer.innerHTML = `<iframe id="YTPlayer" class="responsive-iframe" src="${youtubeUrl}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>`;
+					youtubePlayer.style.display = 'block';
+					YTPlayer = new YT.Player('YTPlayer', {
+					events: {
+						'onReady': onPlayerReady,
+						'onStateChange': onStateChange,
+					}
+					});
 				}
-				});
 
 			} else if (data.type === 'VID') {
 				stopYoutubePlayer();  // Arrêter le lecteur YouTube
@@ -163,6 +170,7 @@ function eventPlaying() {
 
 function onPlayerReady(event) {
 	console.log('YT READY');
+	YTready = true;
 	event.target.playVideo();
 }
 
@@ -204,6 +212,7 @@ function stopYoutubePlayer() {
 	const youtubePlayer = document.getElementById('youtubePlayer');
 	youtubePlayer.innerHTML = ''; // Supprimer l'iframe du lecteur YouTube pour arrêter la lecture
 	youtubePlayer.style.display = 'none'; // Masquer le lecteur YouTube si visible
+	YTready = false;
 }
 
 function stopDownloadButton() {
@@ -296,4 +305,3 @@ document.addEventListener('DOMContentLoaded', function() {
 		});
 	});
 });
-
