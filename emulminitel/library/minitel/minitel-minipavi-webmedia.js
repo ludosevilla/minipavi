@@ -2,7 +2,7 @@
 /**
  * @file minitel-minipavi-webmedia.js
  * @author Jean-arthur Silve <contact@minipavi.fr>
- * @version 1.0
+ * @version 1.1
  *
  * Ajout des possibilités multimedia à l'émulateur si connecté à un serveur MiniPavi
  */
@@ -30,6 +30,7 @@ Minitel.MiniPaviWebMedia = class {
 		this.numKo = 0;
 		this.container = container;
 		this.callMiniPaviWM(container);
+		this.lastEvent = '';
 		
 		var linkButton=container.getElementsByClassName('mpwb-linkButton');
 		if (linkButton.length != 1)
@@ -113,8 +114,9 @@ Minitel.MiniPaviWebMedia = class {
 				var url = elem.getAttribute("data-url");
 			
 				this.isFetching = true; 
-				const fullUrl = `${url}&pin=${encodeURIComponent(pinValue)}`;
-				
+				const fullUrl = `${url}&pin=${encodeURIComponent(pinValue)}&lastevent=${this.lastEvent}`;
+				console.log(fullUrl);
+				this.lastEvent = '';
 				fetch(fullUrl)
 					.then(response => {
 						if (!response.ok) {
@@ -182,6 +184,11 @@ Minitel.MiniPaviWebMedia = class {
 					this.stopLinkButton(this.linkButton);						
 					this.audioPlayer.src = data.infos;
 					this.audioPlayer.style.display = 'block';
+					
+					this.audioPlayer.onended = function(){that.eventStopped();};
+					this.audioPlayer.onplaying = function(){that.eventPlaying();};
+					
+					
 					this.audioPlayer.play();
 					this.openButton(this.mpwmClose);
 				} else if (data.type === 'YT') {
@@ -196,7 +203,8 @@ Minitel.MiniPaviWebMedia = class {
 					
 					this.YTPlayer = new YT.Player('YTPlayer', {
 					events: {
-						'onReady': that.onPlayerReady
+						'onReady': that.onPlayerReady,
+						'onStateChange': that.onStateChange.bind(this),
 					}
 					});
 
@@ -208,6 +216,10 @@ Minitel.MiniPaviWebMedia = class {
 					this.openButton(this.mpwmClose);
 					this.videoPlayer.src = data.infos;
 					this.videoPlayer.style.display = 'block';
+					
+					this.videoPlayer.onended = function(){that.eventStopped();};
+					this.videoPlayer.onplaying = function(){that.eventPlaying();};
+					
 					this.videoPlayer.play();
 				} else if (data.type === 'URL') {
 					this.stopYoutubePlayer(this.youtubePlayer);  
@@ -225,9 +237,28 @@ Minitel.MiniPaviWebMedia = class {
 		}
 	}
 
+
+	eventStopped() {
+		this.lastEvent = 'STOP';
+		console.log("Arret lecteur");
+	}
+
+	eventPlaying() {
+		this.lastEvent = 'START';
+		console.log("Lecture");
+	}
+
+
 	onPlayerReady(event) {
 		console.log('YT READY');
 		event.target.playVideo();
+	}
+	
+	onStateChange(event,that) {
+		if (event.data == 0)
+			this.eventStopped();
+		else if (event.data == 1)
+			this.eventPlaying();
 	}
 	
 	stopLinkButton(linkButton) {
