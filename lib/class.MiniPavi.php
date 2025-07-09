@@ -14,6 +14,7 @@
  * 01/05/2024 : ajout addCommandDuplicateStream
  * 13/09/2024 : ajout fonctions pour l'économiseur d'écran
  * 11/10/2024 : ajout addCommandInputForm
+ * 08/07/2025 : ajout addCommandSetParam
  */
 
 
@@ -142,6 +143,8 @@ class MiniPavi {
 	public $tempBuffer='';
 	public $screenBuffer='';
 	public $screenSaver=false;
+	public $screenSaverType=2;			// 0: Désactivé, 1: Maintient écran, 2: Smiley, 3: Texte modifiable
+	public $screenSaverText='Touch my keyboard!';			// Texte si screenSaverType = 3
 	
 	public $tSimulateUser = array();
 	
@@ -836,6 +839,10 @@ class MiniPavi {
 							trigger_error ("[MiniPavi-class] commande duplicateStream");
 							$returnVal = $this->addCommandDuplicateStream(@$rJson->COMMAND,$objConfig->visuKey);
 							break;
+						case 'setParam':
+							trigger_error ("[MiniPavi-class] commande setParam");
+							$this->addCommandSetParam(@$rJson->COMMAND);
+							break;
 						case 'libCnx':		
 							trigger_error ("[MiniPavi-class] commande déconnexion");
 							$returnVal = -99;
@@ -1291,6 +1298,26 @@ class MiniPavi {
 	}
 	
 
+
+	/*************************************************
+	// Execution de la commande de paramètrage de minipavi
+	// objCommand: commande
+	*************************************************/
+	
+	function addCommandSetParam($objCommand) {
+		switch (@$objCommand->param->paramName) {
+		case 'screensaver':
+			$t = (int)@$objCommand->param->params->type; // (0,1,2,3)
+			if ($t<0 || $t>3) $t=2; // Defaut : Smiley
+			$this->screenSaverType = $t;
+			if ($t == 3) {	// Texte libre
+				if (@$objCommand->param->params->text=='')
+					$this->screenSaverText = "Not set";
+				else $this->screenSaverText = mb_substr($objCommand->param->params->text,0,30);
+			}
+		}
+	}
+
 	/*************************************************
 	// Traitement de la touche "SUITE"  lors d'une commande de saisie de message
 	// Retourne le videotex à afficher
@@ -1719,7 +1746,7 @@ class MiniPavi {
 	***********************************************/
 	
 	function screenSaverStop() {
-		if ($this->screenSaver && $this->screenBuffer!='') {
+		if ($this->screenSaver && ($this->screenSaverType == 2 || $this->screenSaverType == 3) && $this->screenBuffer!='') {
 			$this->inCnx->send("\x0C".$this->screenBuffer,$this);
 		}
 		$this->screenSaver = false;
@@ -1731,19 +1758,32 @@ class MiniPavi {
 	
 
 	function screenSaverGo() {
-		$this->screenSaver = true;
-		$color = rand (65,71);
-		$lstart = rand(1,18);
-		$cstart = rand(2,32);
+		if (!$this->screenSaverType)
+			return;
 		
-		$vdt = "\x14\x1F@A\x18\x0C";
-		$vdt.= "\x1F".chr(64+$lstart).chr(64+$cstart)."\x0E\x1BC x^__|0";
-		$vdt.="\x1F".chr(64+$lstart+1).chr(64+$cstart)."\x0E\x1BCz_\x1BQ7_7__\x1BP0";
-		$vdt.="\x1F".chr(64+$lstart+2).chr(64+$cstart)."\x0E\x1BC_\x1BQ7___7_\x1BP5";
-		$vdt.="\x1F".chr(64+$lstart+3).chr(64+$cstart)."\x0E\x1BCk_\x1BQvss^_\x1BP!";
-		$vdt.="\x1F".chr(64+$lstart+4).chr(64+$cstart)."\x0E\x1BC +o__/!";
-		$vdt.="\x1F".chr(64+$lstart+5).chr(64+$cstart-1)."\x1BH\x1B".chr($color).'Touche mon';
-		$vdt.="\x1F".chr(64+$lstart+6).chr(64+$cstart)."\x1BH\x1B".chr($color).'clavier!';
+		$this->screenSaver = true;
+		if ($this->screenSaverType == 1) {
+			$vdt="\x01";
+		} else if ($this->screenSaverType == 2) {
+			$color = rand (65,71);
+			$lstart = rand(1,18);
+			$cstart = rand(2,32);
+			
+			$vdt = "\x14\x1F@A\x18\x0C";
+			$vdt.= "\x1F".chr(64+$lstart).chr(64+$cstart)."\x0E\x1BC x^__|0";
+			$vdt.="\x1F".chr(64+$lstart+1).chr(64+$cstart)."\x0E\x1BCz_\x1BQ7_7__\x1BP0";
+			$vdt.="\x1F".chr(64+$lstart+2).chr(64+$cstart)."\x0E\x1BC_\x1BQ7___7_\x1BP5";
+			$vdt.="\x1F".chr(64+$lstart+3).chr(64+$cstart)."\x0E\x1BCk_\x1BQvss^_\x1BP!";
+			$vdt.="\x1F".chr(64+$lstart+4).chr(64+$cstart)."\x0E\x1BC +o__/!";
+			$vdt.="\x1F".chr(64+$lstart+5).chr(64+$cstart-1)."\x1BH\x1B".chr($color).'Touche mon';
+			$vdt.="\x1F".chr(64+$lstart+6).chr(64+$cstart)."\x1BH\x1B".chr($color).'clavier!';
+		} else if ($this->screenSaverType == 3) {
+			$lstart = rand(1,24);
+			$cstart = rand(1,40-mb_strlen($this->screenSaverText));
+			$color = rand (65,71);
+			$vdt = "\x14\x1F@A\x18\x0C";
+			$vdt.="\x1F".chr(64+$lstart).chr(64+$cstart)."\x1BH\x1B".chr($color).$this->toG2($this->screenSaverText);
+		}
 		$this->inCnx->send($vdt,$this,true);
 	}
 	
