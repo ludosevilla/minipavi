@@ -16,6 +16,7 @@ class MinipaviCfg {
 	public $host;
 	public $verbose;
 	public $maxCnx;	
+	public $maxCnxByIP;	
 	public $maxHisto;	
 	public $timeout;	
 	public $wsPort;
@@ -89,6 +90,7 @@ class MinipaviCfg {
 			$this->verbose=true;
 		$this->host = trim(@$obj->host);
 		$this->maxCnx = (int)@$obj->maxc;
+		$this->maxCnxByIP = (int)@$obj->maxcip;
 		$this->maxHisto = (int)@$obj->maxhisto;
 		$this->timeout = (int)@$obj->timeout;
 		$this->wsPort = (int)@$obj->wsport;
