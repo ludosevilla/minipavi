@@ -305,6 +305,10 @@ if ($cfgFile!='') echo ("Fichier configuration: $cfgFile\n");
 else echo ("Fichier configuration: **Aucun**\n");
 
 echo ("Maximum de connexions: ".$objConfig->maxCnx."\n");
+if ($objConfig->maxCnxByIP>0)
+	echo ("Maximum de connexions/ip: ".$objConfig->maxCnxByIP."\n");
+else echo ("Maximum de connexions/ip: Aucune limite\n");
+	
 echo ("Maximum historique: ".$objConfig->maxHisto."\n");
 echo ("Timout inactivité (sec.): ".$objConfig->timeout."\n");
 echo ("Port TCP Websockets: ");
@@ -541,6 +545,24 @@ do {
 		$ip = @$tTmp[0];
 		
 		
+		if ($objConfig->maxCnxByIP>0 && (count($objConfig->tAsterisk)==0 || (count($objConfig->tAsterisk)>0 && $objConfig->tAsterisk['ip']!=$ip)) ) {
+			$cip=0;
+			foreach($tObjClient as $objMiniPaviC) {
+				if ($objMiniPaviC->clientIp == $ip) {
+					$cip++;
+					if ($cip>=$objConfig->maxCnxByIP) {
+						// Trop de connexion depuis cette IP
+						trigger_error("[MiniPavi-Main] Max connexions atteint pour IP=".$ip);
+						break;
+					}
+				}
+			}
+			if ($cip>=$objConfig->maxCnxByIP) {
+				$inCnx->close();				
+				continue;
+			}
+			
+		}
 		
 		AbuseIPDB::check($ip,$objConfig->ipDBKey,$indice,$pays,$objConfig->ipBlackList,$objConfig->ipWhiteList);
 		trigger_error("[MiniPavi-Main] Vérification IP $ip idx=$indice [$pays]");
