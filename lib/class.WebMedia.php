@@ -40,6 +40,8 @@ class WebMedia {
 				}
 			} else if (preg_match('/YT:(.*)/',$r[0],$t)) {
 				$this->setRequest('YT',trim($t[1]));
+			} else if (preg_match('/DM:(.*)/',$r[0],$t)) {
+				$this->setRequest('DM',trim($t[1]));
 			} else if (preg_match('/VID:(.*)/',$r[0],$t)) {
 				if (@filter_var($t[1], FILTER_VALIDATE_URL)!==false) {
 					$this->setRequest('VID',trim($t[1]));
