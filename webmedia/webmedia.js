@@ -1,7 +1,7 @@
 /**
  * @file webmedia.js
  * @author Jean-arthur SILVE <contact@minipavi.fr>
- * @version 1.1
+ * @version 1.2
  */
 
 var YTPlayer;
@@ -15,7 +15,7 @@ let YTready = false;
 function callMiniPaviWM(pinValue) {
 	
 	
-	// Ligne à modifier en indiquant l'adresse de votre passerelle (et port) 
+   	// Ligne à modifier en indiquant l'adresse de votre passerelle (et port) 
 	
 	const url = 'https://mapasserelleminipavi.com:XXXX?action=webmedia';	
    
@@ -59,6 +59,7 @@ function handleApiResponse(data) {
 	const instructions = document.getElementById('instructions');
 	const audioPlayer = document.getElementById('audioPlayer');
 	const youtubePlayer = document.getElementById('youtubePlayer');
+	const dmPlayer = document.getElementById('dmPlayer');
 	const videoPlayer = document.getElementById('videoPlayer');
 	const imgViewer = document.getElementById('imgViewer');
 	const linkButton = document.getElementById('linkButton');
@@ -74,6 +75,7 @@ function handleApiResponse(data) {
 		resetForm();
 		clearInterval(intervalId); // Arrêter l'appel à l'URL
 		stopYoutubePlayer();  // Arrêter le lecteur YouTube
+		stopDmPlayer();			// Arrêter le lecteur Daimotion
 		stopAudioPlayer();  // Arrêter le lecteur audio
 		stopVideoPlayer();  // Arrêter le lecteur video
 		stopImgViewer();						
@@ -92,6 +94,7 @@ function handleApiResponse(data) {
 			contentMessage.innerHTML = '';
 			if (data.type === 'IMG') {
 				stopYoutubePlayer();
+				stopDmPlayer();
 				stopVideoPlayer();
 				stopAudioPlayer();
 				stopDownloadButton();
@@ -99,6 +102,7 @@ function handleApiResponse(data) {
 				imgViewer.style.display = 'block';
 			} else if (data.type === 'SND') {
 				stopYoutubePlayer();
+				stopDmPlayer();
 				stopVideoPlayer();
 				stopImgViewer();	
 				stopDownloadButton();						
@@ -109,18 +113,33 @@ function handleApiResponse(data) {
 				audioPlayer.play();
 			} else if (data.type === 'URL') {
 				stopYoutubePlayer();  
+				stopDmPlayer();
 				stopVideoPlayer(); 
 				stopImgViewer();	
 				stopAudioPlayer();
 				linkButton.setAttribute('data-filename', data.infos); 
 				linkButton.innerHTML = "Cliquez pour aller vers<br/><b>"+data.infos+"</b>";
 				linkButton.style.display = 'inline-block';
+			} else if (data.type === 'DM') {
+				stopYoutubePlayer();  
+				stopAudioPlayer();
+				stopVideoPlayer();
+				stopImgViewer();				
+				stopDownloadButton();						
+				
+				dailymotion.createPlayer("dmPlayer", {
+					  video: `${data.infos}`
+				})
+				.then(
+				(player) => setDMEvents(player)
+				);
 			} else if (data.type === 'YT') {
 				if (YTready) {
 					YTPlayer.loadVideoById(data.infos);
 					YTPlayer.playVideo();
 				} else {
 					YTready = false;
+					stopDmPlayer();
 					stopAudioPlayer();
 					stopVideoPlayer();
 					stopImgViewer();				
@@ -130,14 +149,15 @@ function handleApiResponse(data) {
 					youtubePlayer.style.display = 'block';
 					YTPlayer = new YT.Player('YTPlayer', {
 					events: {
-						'onReady': onPlayerReady,
-						'onStateChange': onStateChange,
+						'onReady': onYTPlayerReady,
+						'onStateChange': onYTStateChange,
 					}
 					});
 				}
 
 			} else if (data.type === 'VID') {
 				stopYoutubePlayer();  // Arrêter le lecteur YouTube
+				stopDmPlayer();
 				stopAudioPlayer();  // Arrêter le lecteur audio
 				stopImgViewer();		
 				stopDownloadButton();
@@ -168,18 +188,37 @@ function eventPlaying() {
 }
 
 
-function onPlayerReady(event) {
+function onYTPlayerReady(event) {
 	console.log('YT READY');
 	YTready = true;
 	event.target.playVideo();
 }
 
-function onStateChange(event) {
+function onYTStateChange(event) {
 	if (event.data == 0)
 		eventStopped();
 	else if (event.data == 1)
 		eventPlaying();
 }
+
+
+
+function setDMEvents(player) {
+	player.on(dailymotion.events.VIDEO_PLAY, DMEventPlay);
+	player.on(dailymotion.events.VIDEO_END, DMEventStopped);
+}
+
+
+function DMEventPlay(event) {
+	eventPlaying();
+}
+
+function DMEventStopped(event) {
+	stopDmPlayer();
+	eventStopped();
+}
+
+
 
 
 function showLoader(show) {
@@ -214,6 +253,14 @@ function stopYoutubePlayer() {
 	youtubePlayer.style.display = 'none'; // Masquer le lecteur YouTube si visible
 	YTready = false;
 }
+
+
+function stopDmPlayer() {
+	const dmPlayer = document.getElementById('dmPlayer');
+	dmPlayer.innerHTML = ''; 
+	dmPlayer.style.display = 'none';
+}
+
 
 function stopDownloadButton() {
 	const linkButton = document.getElementById('linkButton');
@@ -305,3 +352,5 @@ document.addEventListener('DOMContentLoaded', function() {
 		});
 	});
 });
+
+

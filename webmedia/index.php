@@ -22,11 +22,15 @@
 		var firstScriptTag = document.getElementsByTagName('script')[0];
 		firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 	</script>
+	<div style="display:none">
+	  <script src="https://geo.dailymotion.com/player.js"></script>
+	</div>
+	
 	<script src="webmedia.js"></script>
 
     
     <div id="content">
-		<img src="images/logo.png" style="max-width:300px;"/>
+		<img src="../images/logo.png" style="max-width:300px;"/>
 		<h1>Accès WebMedia</h1>
 		<p id="instructions" style="display:none;">Saisissez le code Pin de votre connexion à MiniPavi pour accèder à son contenu multimedia.
 		<br/><span style="font-size:11px">Le code pin est indiqué en haut à gauche de l'écran d'accueil MiniPavi sur votre Minitel.</span></p>
@@ -46,6 +50,7 @@
 		<div id="contentMessage"></div>
 		<audio id="audioPlayer" controls autoplay></audio>
 		<div id="youtubePlayer"></div>
+		<div id="dmPlayer" style="max-height:315px;"></div>
 		<video id="videoPlayer" controls playsinline autoplay allow="fullscreen" style="max-width: 100%;height: auto;display:block;"></video>			
 		<img id="imgViewer"></img>
 		<button id="linkButton" data-filename=""></button>
