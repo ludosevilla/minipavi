@@ -151,6 +151,7 @@ function handleApiResponse(data) {
 					events: {
 						'onReady': onYTPlayerReady,
 						'onStateChange': onYTStateChange,
+						'onError': eventStopped
 					}
 					});
 				}
