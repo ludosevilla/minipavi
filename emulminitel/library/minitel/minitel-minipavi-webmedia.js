@@ -243,6 +243,7 @@ Minitel.MiniPaviWebMedia = class {
 					events: {
 						'onReady': that.onYTPlayerReady,
 						'onStateChange': that.onYTStateChange.bind(this),
+						'onError': that.eventStopped.bind(this)
 					}
 					});
 
