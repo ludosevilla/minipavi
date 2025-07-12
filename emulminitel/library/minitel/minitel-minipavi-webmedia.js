@@ -14,6 +14,15 @@ tag.src = "https://www.youtube.com/iframe_api";
 var firstScriptTag = document.getElementsByTagName('script')[0];
 firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
+// insertion du script API Dailymotion
+var tag = document.createElement('div');
+tag.style = "display:none";
+var tag2 = document.createElement('script');
+tag2.src = "https://geo.dailymotion.com/player.js";
+tag.appendChild(tag2);
+var firstDivTag = document.getElementsByTagName('div')[0];
+firstDivTag.parentNode.insertBefore(tag, firstDivTag);
+
 
 /**
  * @namespace Minitel
@@ -25,6 +34,7 @@ Minitel.MiniPaviWebMedia = class {
 
     constructor(container) {
 		this.YTPlayer = null;
+		this.DMPlayer = null;
 		this.intervalId = null;
 		this.isFetching = false; 
 		this.numKo = 0;
@@ -46,6 +56,10 @@ Minitel.MiniPaviWebMedia = class {
 		if (youtubePlayer.length != 1)
 			return;
 		this.youtubePlayer = youtubePlayer.item(0);
+
+
+		this.dmPlayer =document.getElementById('dmPlayerId');
+		this.dmPlayerOuter =document.getElementById('dmPlayerOuter');
 
 		var videoPlayer=container.getElementsByClassName('mpwb-videoPlayer');
 		if (videoPlayer.length != 1)
@@ -78,6 +92,7 @@ Minitel.MiniPaviWebMedia = class {
 			that.stopYoutubePlayer(that.youtubePlayer);  
 			that.stopAudioPlayer(that.audioPlayer); 
 			that.stopVideoPlayer(that.videoPlayer); 
+			that.stopDmPlayer(that.dmPlayer,that.dmPlayerOuter);
 			that.stopImgViewer(that.imgViewer);
 			that.stopLinkButton(that.linkButton);
 			that.closeButton(that.mpwmClose);
@@ -161,6 +176,7 @@ Minitel.MiniPaviWebMedia = class {
 			sb.style.backgroundColor="#d65204"; // Orange
 			this.numKo++;
 			this.stopYoutubePlayer(this.youtubePlayer);  
+			this.stopDmPlayer(this.dmPlayer,this.dmPlayerOuter);
 			this.stopAudioPlayer(this.audioPlayer);  
 			this.stopVideoPlayer(this.videoPlayer);  
 			this.stopImgViewer(this.imgViewer);
@@ -171,6 +187,7 @@ Minitel.MiniPaviWebMedia = class {
 			if (data.content === '1') {
 				if (data.type === 'IMG') {
 					this.stopYoutubePlayer(this.youtubePlayer); 
+					this.stopDmPlayer(this.dmPlayer,this.dmPlayerOuter);
 					this.stopVideoPlayer(this.videoPlayer); 
 					this.stopAudioPlayer(this.audioPlayer); 
 					this.stopLinkButton(this.linkButton);
@@ -179,6 +196,7 @@ Minitel.MiniPaviWebMedia = class {
 					this.openButton(this.mpwmClose);
 				} else if (data.type === 'SND') {
 					this.stopYoutubePlayer(this.youtubePlayer);
+					this.stopDmPlayer(this.dmPlayer,this.dmPlayerOuter);
 					this.stopVideoPlayer(this.videoPlayer); 
 					this.stopImgViewer(this.imgViewer);	
 					this.stopLinkButton(this.linkButton);						
@@ -191,7 +209,27 @@ Minitel.MiniPaviWebMedia = class {
 					
 					this.audioPlayer.play();
 					this.openButton(this.mpwmClose);
+				} else if (data.type === 'DM') {
+					this.stopYoutubePlayer(this.youtubePlayer);  
+					this.stopAudioPlayer(this.audioPlayer); 
+					this.stopVideoPlayer(this.videoPlayer); 
+					this.stopImgViewer(this.imgViewer);		
+					this.stopLinkButton(this.linkButton);						
+					
+					dailymotion.createPlayer("dmPlayerId", {
+						  video: `${data.infos}`
+					})
+					.then(
+					(player) => this.setDMEvents(player)
+					);
+					
+					this.dmPlayer.style.display = 'block';
+					this.dmPlayerOuter.style.display = 'block';
+					
+					this.openButton(this.mpwmClose);
+					
 				} else if (data.type === 'YT') {
+					this.stopDmPlayer(this.dmPlayer,this.dmPlayerOuter);
 					this.stopAudioPlayer(this.audioPlayer); 
 					this.stopVideoPlayer(this.videoPlayer); 
 					this.stopImgViewer(this.imgViewer);		
@@ -203,13 +241,14 @@ Minitel.MiniPaviWebMedia = class {
 					
 					this.YTPlayer = new YT.Player('YTPlayer', {
 					events: {
-						'onReady': that.onPlayerReady,
-						'onStateChange': that.onStateChange.bind(this),
+						'onReady': that.onYTPlayerReady,
+						'onStateChange': that.onYTStateChange.bind(this),
 					}
 					});
 
 				} else if (data.type === 'VID') {
 					this.stopYoutubePlayer(this.youtubePlayer);  
+					this.stopDmPlayer(this.dmPlayer,this.dmPlayerOuter);
 					this.stopAudioPlayer(this.audioPlayer); 
 					this.stopImgViewer(this.imgViewer);	
 					this.stopLinkButton(this.linkButton);						
@@ -223,6 +262,7 @@ Minitel.MiniPaviWebMedia = class {
 					this.videoPlayer.play();
 				} else if (data.type === 'URL') {
 					this.stopYoutubePlayer(this.youtubePlayer);  
+					this.stopDmPlayer(this.dmPlayer,this.dmPlayerOuter);
 					this.stopAudioPlayer(this.audioPlayer); 
 					this.stopImgViewer(this.imgViewer);	
 					this.stopLinkButton(this.linkButton);		
@@ -249,17 +289,34 @@ Minitel.MiniPaviWebMedia = class {
 	}
 
 
-	onPlayerReady(event) {
-		console.log('YT READY');
+	onYTPlayerReady(event) {
 		event.target.playVideo();
 	}
 	
-	onStateChange(event,that) {
+	onYTStateChange(event,that) {
 		if (event.data == 0)
 			this.eventStopped();
 		else if (event.data == 1)
 			this.eventPlaying();
 	}
+	
+	
+	setDMEvents(player) {
+		player.on(dailymotion.events.VIDEO_PLAY, this.DMEventPlay.bind(this));
+		player.on(dailymotion.events.VIDEO_END, this.DMEventStopped.bind(this));
+		this.DMPlayer = player;
+	}
+
+
+	DMEventPlay(event) {
+		this.eventPlaying();
+	}
+
+	DMEventStopped(event) {
+		this.stopDmPlayer(this.dmPlayer,this.dmPlayerOuter);
+		this.eventStopped();
+	}
+	
 	
 	stopLinkButton(linkButton) {
 		linkButton.style.display = 'none';
@@ -284,6 +341,16 @@ Minitel.MiniPaviWebMedia = class {
 	stopYoutubePlayer(youtubePlayer) {
 		youtubePlayer.innerHTML = ''; 
 		youtubePlayer.style.display = 'none'; 
+	}
+
+	stopDmPlayer(dmPlayer,dmPlayerOuter) {
+		if (this.DMPlayer)
+			this.DMPlayer.destroy();
+		this.DMPlayer = null;
+		dmPlayer.innerHTML = ''; 
+		dmPlayer.style.display = 'none';
+		dmPlayerOuter.style.display = 'none';
+		this.closeButton(this.mpwmClose);
 	}
 
 	closeButton(button) {
