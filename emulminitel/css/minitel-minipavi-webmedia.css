@@ -25,6 +25,13 @@
 	display:none;
 }
 
+.mpwb-dmPlayer {
+	max-height: 130px;
+	height: 130px;
+	width:200px;
+	display:none;
+}
+
 .mpwb-videoPlayer {
 	height: 130px;
 	max-height: 130px;
