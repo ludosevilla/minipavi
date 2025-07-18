@@ -41,6 +41,7 @@ Minitel.MiniPaviWebMedia = class {
 		this.container = container;
 		this.callMiniPaviWM(container);
 		this.lastEvent = '';
+		this.YTready=false;
 		
 		var linkButton=container.getElementsByClassName('mpwb-linkButton');
 		if (linkButton.length != 1)
@@ -229,23 +230,30 @@ Minitel.MiniPaviWebMedia = class {
 					this.openButton(this.mpwmClose);
 					
 				} else if (data.type === 'YT') {
-					this.stopDmPlayer(this.dmPlayer,this.dmPlayerOuter);
-					this.stopAudioPlayer(this.audioPlayer); 
-					this.stopVideoPlayer(this.videoPlayer); 
-					this.stopImgViewer(this.imgViewer);		
-					this.stopLinkButton(this.linkButton);						
-					this.youtubePlayer.style.display = 'block';						
-					this.openButton(this.mpwmClose);
-					const youtubeUrl = `https://www.youtube.com/embed/${data.infos}?enablejsapi=1&rel=0&origin=`+encodeURIComponent(window.location.origin);
-					this.youtubePlayer.innerHTML = `<iframe id="YTPlayer" class="responsive-ytiframe" src="${youtubeUrl}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>`;
-					
-					this.YTPlayer = new YT.Player('YTPlayer', {
-					events: {
-						'onReady': that.onYTPlayerReady,
-						'onStateChange': that.onYTStateChange.bind(this),
-						'onError': that.eventStopped.bind(this)
+					if (this.YTready) {
+						this.YTPlayer.loadVideoById(data.infos);
+						this.YTPlayer.playVideo();	
+					} else {
+						this.YTready=false;
+						
+						this.stopDmPlayer(this.dmPlayer,this.dmPlayerOuter);
+						this.stopAudioPlayer(this.audioPlayer); 
+						this.stopVideoPlayer(this.videoPlayer); 
+						this.stopImgViewer(this.imgViewer);		
+						this.stopLinkButton(this.linkButton);						
+						this.youtubePlayer.style.display = 'block';						
+						this.openButton(this.mpwmClose);
+						const youtubeUrl = `https://www.youtube.com/embed/${data.infos}?enablejsapi=1&rel=0&origin=`+encodeURIComponent(window.location.origin);
+						this.youtubePlayer.innerHTML = `<iframe id="YTPlayer" class="responsive-ytiframe" src="${youtubeUrl}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>`;
+						
+						this.YTPlayer = new YT.Player('YTPlayer', {
+						events: {
+							'onReady': that.onYTPlayerReady.bind(this),
+							'onStateChange': that.onYTStateChange.bind(this),
+							'onError': that.eventStopped.bind(this)
+						}
+						});
 					}
-					});
 
 				} else if (data.type === 'VID') {
 					this.stopYoutubePlayer(this.youtubePlayer);  
@@ -291,6 +299,7 @@ Minitel.MiniPaviWebMedia = class {
 
 
 	onYTPlayerReady(event) {
+		this.YTready = true;
 		event.target.playVideo();
 	}
 	
