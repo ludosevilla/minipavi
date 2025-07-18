@@ -351,6 +351,7 @@ Minitel.MiniPaviWebMedia = class {
 	stopYoutubePlayer(youtubePlayer) {
 		youtubePlayer.innerHTML = ''; 
 		youtubePlayer.style.display = 'none'; 
+		this.YTready=false;
 	}
 
 	stopDmPlayer(dmPlayer,dmPlayerOuter) {
