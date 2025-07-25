@@ -888,7 +888,12 @@ do {
 		
 		$retSocket=@stream_select($tTmp, $null, $null, 0, $to);
 
-		if (time() - $objMiniPavi->tLastAction > $objConfig->timeout) {
+		$d = time() - $objMiniPavi->tLastAction;
+		if ($objMiniPavi->timeout == 0)
+			$to = $objConfig->timeout;
+		else $to = $objMiniPavi->timeout;
+		
+		if ($d>$to) {
 			$resType=InCnx::WS_READTYPE_DEC;
 			trigger_error("[MiniPavi-Cli] DECO 3 Timeout Pid ".getmypid()." uniqueId=".$objMiniPavi->uniqueId);
 			$objMiniPavi->inCnx->send("\x1F@A".$objMiniPavi->toG2("Deconnexion pour inactivité...")."\x18",$objMiniPavi);
