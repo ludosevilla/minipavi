@@ -153,6 +153,7 @@ class MiniPavi {
 	public $extCallChannel;
 	private $fRecord;
 	public $objWebMedia;
+	public $timeout;
 	
 	
 	
@@ -210,6 +211,7 @@ class MiniPavi {
 		$this->infos = '';		
 		$this->versionMinitel='';
 		$this->objWebMedia = new WebMedia();
+		$this->timeout=0;
 	}
 	
 	
@@ -1315,6 +1317,13 @@ class MiniPavi {
 					$this->screenSaverText = "Not set";
 				else $this->screenSaverText = mb_substr($objCommand->param->params->text,0,30);
 			}
+			return;
+		case 'timeout':			
+			$t = (int)@$objCommand->param->params->minutes; // minutes
+			if ($t<0 || $t >30)
+				$t = 0;
+			$this->timeout=$t*60;
+			return;
 		}
 	}
 
