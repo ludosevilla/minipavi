@@ -17,7 +17,7 @@
 declare(ticks = 1); 
 class WSConnect {
 	
-	const WSCNX_MAXTIME = 1800;	// Durée maximum d'une connexion
+	const WSCNX_MAXTIME = 3600;	// Durée maximum d'une connexion
 	const WSCNX_MAXTIME_NOUSERRX = 180;	// Durée maximum sans recevoir de données de l'utilisateur
 	
 	/*************************************************
@@ -123,8 +123,7 @@ class WSConnect {
 				else $to = 250000;
 			}
 			
-			$retSocket=stream_select($tRead, $null, $null, 0, $to);
-			
+			$retSocket=safe_stream_select($tRead, $null, $null, 0, $to);
 			if ($retSocket!==false && $retSocket>0) {
 				$errCount = 0;
 				foreach($tRead as $k=>$sock) {
@@ -237,7 +236,9 @@ class WSConnect {
 					trigger_error("[MiniPavi-WSConnect] Durée max autorisée atteinte - Stop");
 					$stop = true;
 				}
-			} else {
+			} else  {
+				
+				
 				$errCount++;
 				if ($errCount>10) {
 					// Erreur..Deconnexion

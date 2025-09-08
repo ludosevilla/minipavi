@@ -188,7 +188,7 @@ class AstAMI {
 		$errCount = 0;
 		while(true) {
 			$tRead[0]=$socket;
-			$r=stream_select($tRead, $null, $null, 30, 0);
+			$r=safe_stream_select($tRead, $null, $null, 30, 0);
 			if ($r===0) {
 				trigger_error("[MiniPavi-AMICall] Connexion time out");
 				$objMiniPaviC->unregisterLocalSocket($socketFile);
@@ -231,7 +231,7 @@ class AstAMI {
 			}			
 			
 			
-			$retSocket=stream_select($tRead, $null, $null, 0, $to);
+			$retSocket=safe_stream_select($tRead, $null, $null, 0, $to);
 			
 			if ($retSocket!==false && $retSocket>0) {
 				$errCount=0;
@@ -446,7 +446,7 @@ class AstAMI {
 		do  {
 			$tRead[0] = $socket;	// Socket locale
 			$tRead[1] = $objMiniPaviC->inCnx->getSocket();	// Socket externe
-			$retSocket=stream_select($tRead, $null, $null, 0, 250000);
+			$retSocket=safe_stream_select($tRead, $null, $null, 0, 250000);
 			if ($retSocket!==false && $retSocket>0) {
 				$errCount = 0;
 				foreach($tRead as $k=>$sock) {

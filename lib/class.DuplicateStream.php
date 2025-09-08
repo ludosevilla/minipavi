@@ -44,7 +44,7 @@ class DuplicateStream {
 		
 		$errCount = 0;
 		while(true) {
-			$retSocket=@stream_select($tCpy, $null, $null, 5, 0);		
+			$retSocket=@safe_stream_select($tCpy, $null, $null, 5, 0);		
 			
 			if ($retSocket>0 && in_array($socketServ,$tCpy)) {		
 				$socket = stream_socket_accept($socketServ,5);
@@ -81,7 +81,7 @@ class DuplicateStream {
 				else $to = 250000;
 			}
 			
-			$retSocket=stream_select($tRead, $null, $null, 0, $to);
+			$retSocket=safe_stream_select($tRead, $null, $null, 0, $to);
 			
 			if ($retSocket!==false && $retSocket>0) {
 				$errCount=0;

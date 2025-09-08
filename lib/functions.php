@@ -50,6 +50,7 @@ function fatherIsCalling($signal)
 				$objMiniPavi->objWebMedia->tPing=time();
 				//trigger_error("[MiniPavi-Cli] lastevent=".$sfTab['lastevent']);
 				if ($sfTab['lastevent']!='') {
+					// Ajouter event READ => maj time last action seulement
 					$objMiniPavi->tSimulateUser['time']=time();
 					$objMiniPavi->tSimulateUser['datas']='WMLASTEVENT/'.$sfTab['lastevent'];
 				}
@@ -456,4 +457,35 @@ global $tObjClient;
 			return $pin;
 		}
 	} while(true);
+}
+
+
+/**************
+*** Wrapper pour stream_select 
+***************/
+
+function safe_stream_select(&$read, &$write, &$except, $sec, $usec = 0) {
+    do {
+        $lastWarning = null;
+
+        // Intercepteur temporaire de warnings
+        set_error_handler(function($errno, $errstr) use (&$lastWarning) {
+            $lastWarning = $errstr;
+            return true; // on bloque le warning normal
+        });
+
+        $result = stream_select($read, $write, $except, $sec, $usec);
+
+        restore_error_handler();
+
+        // Si erreur EINTR → on recommence la boucle
+        if ($result === false && $lastWarning !== null &&
+            strpos($lastWarning, 'Interrupted system call') !== false) {
+            continue;
+        }
+
+        // Sinon on sort
+        return $result;
+
+    } while (true);
 }
