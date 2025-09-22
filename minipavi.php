@@ -394,6 +394,7 @@ declare(ticks = 1);
 function sigint()  { 
 	exit;  
 }  
+pcntl_async_signals(true);
 pcntl_signal(SIGCHLD, "onChildStop");
 pcntl_signal(SIGINT, 'sigint');  
 pcntl_signal(SIGTERM, 'sigint'); 
