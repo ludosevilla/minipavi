@@ -341,7 +341,6 @@ function onChildStop($signal) {
 	global $tObjClientH;
 	global $objConfig;
 	
-	pcntl_signal(SIGCHLD, "onChildStop");
 	
 	if ($typeProc == TYPE_PROC_MAIN) {
 		while(($pid = pcntl_wait($status, WNOHANG)) > 0) {
