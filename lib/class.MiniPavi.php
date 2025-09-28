@@ -332,7 +332,7 @@ class MiniPavi {
 	*************************************************/
 	
 	function curlCallback($ch,$dlTotal, $dlNow, $ulTotal, $ulNow) {
-		if ($dlNow > 65000)
+		if ($dlNow > 100000)
 			return 1;
 		return 0;
 	}
@@ -401,7 +401,7 @@ class MiniPavi {
 			curl_setopt($ch, CURLOPT_PORT, (int)$elemUrl['port']);
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true );
 		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 4); 
-		curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+		curl_setopt($ch, CURLOPT_TIMEOUT, 25);
 		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
 		curl_setopt($ch, CURLOPT_POSTREDIR , true);
 		curl_setopt($ch, CURLOPT_NOPROGRESS, 0);
@@ -430,7 +430,7 @@ class MiniPavi {
 				curl_setopt($ch, CURLOPT_PORT, (int)$elemUrl['port']);
 			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true );
 			curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 4); 
-			curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+			curl_setopt($ch, CURLOPT_TIMEOUT, 25);
 			curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
 			curl_setopt($ch, CURLOPT_NOPROGRESS, 0);
 			curl_setopt($ch, CURLOPT_PROGRESSFUNCTION, array($this, 'curlCallback'));		
@@ -880,7 +880,7 @@ class MiniPavi {
 			$this->addToBufferOut($dec.$extVdt);
 		} else $this->addToBufferOut($extVdt);
 		
-		if ($returnVal < 1 || ((@$rJson->directcall == 'yes' || @$rJson->directcall == 'yes-cnx' ) && $this->directCallNum < 4))  {
+		if ($returnVal < 1 || ((@$rJson->directcall == 'yes' || @$rJson->directcall == 'yes-cnx' ) && $this->directCallNum < 5))  {
 			// Appel direct si demandé, ou bien si une commande d'appel exterieur VoIP a échouée
 			$this->directCallNum++;
 			$this->command =false;
