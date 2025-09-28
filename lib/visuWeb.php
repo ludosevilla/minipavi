@@ -126,11 +126,12 @@ function visuWeb($visuSocket,$objMiniPaviM,$objConfig,$tObjClient,$tObjClientH,$
 			// Visualisation des statistiques
 			$m = (int)@$tGetParams['m'];
 			$y = (int)@$tGetParams['y'];
-			if ($m == 0 || $y==0) {
+			if ($m < 0 || $m>12 || $y==0) {
 				$m=(int)date('m');
 				$y=(int)date('Y');
 			}
-			$numDays=cal_days_in_month(CAL_GREGORIAN,$m,$y);
+			if ($m>0) $numDays=cal_days_in_month(CAL_GREGORIAN,$m,$y);
+			else $numDays=31;
 			$objStats = new Stats($objConfig->statsPath);
 			$objStats->loadStats($m,$y);
 			
@@ -142,6 +143,7 @@ function visuWeb($visuSocket,$objMiniPaviM,$objConfig,$tObjClient,$tObjClientH,$
 			$body.="<br/><br/><form action='/' method='GET' >";
 			$body.="<input type='hidden' name='action' value='stats' />";
 			$body.="<select name='m'>";
+			$body.="<option value='0' ".@$selectedMonth[0].">Année complète</option>";			
 			$body.="<option value='1' ".@$selectedMonth[1].">Janvier</option>";
 			$body.="<option value='2' ".@$selectedMonth[2].">Février</option>";
 			$body.="<option value='3' ".@$selectedMonth[3].">Mars</option>";
@@ -162,7 +164,9 @@ function visuWeb($visuSocket,$objMiniPaviM,$objConfig,$tObjClient,$tObjClientH,$
 			$body.="</select>&nbsp;";
 			$body.="<input type='submit' class='button-3' value = ' Voir les stats &#x2714;' /></form>";
 
-			$body.="<br/><h3>Statistiques pour ".sprintf('%02d/%4d',$m,$y)."</h3>";
+			if ($m>0)
+				$body.="<br/><h3>Statistiques pour ".sprintf('%02d/%4d',$m,$y)."</h3>";
+			else $body.="<br/><h3>Statistiques pour l'année ".sprintf('%4d',$y)."</h3>";
 
 			$body.="<table class='rounded-corners' width='1000'>
 			<tr>

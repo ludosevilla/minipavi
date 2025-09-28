@@ -69,18 +69,48 @@ class Stats {
 
 	function loadStats($mm,$YYYY) {
 		$this->stats = array();
-		$fileName = $this->fileName.sprintf('%04d%02d',$YYYY,$mm).'.stats';
-		if (!file_exists($fileName)) {
+		if ($mm>0) {
+			// Pour le mois
+			$fileName = $this->fileName.sprintf('%04d%02d',$YYYY,$mm).'.stats';
+			if (!file_exists($fileName)) {
+				return true;
+			}
+			$f = fopen($fileName,'r');
+			if (!$f)
+				return false;
+			flock($f,LOCK_EX);
+			$r = fgets($f);
+			fclose($f);
+			if (($this->stats = @unserialize($r)) === false) 
+				return false;
 			return true;
 		}
-		$f = fopen($fileName,'r');
-		if (!$f)
-			return false;
-		flock($f,LOCK_EX);
-		$r = fgets($f);
-		fclose($f);
-		if (($this->stats = @unserialize($r)) === false) 
-			return false;
-		else return true;
+		// Pour l'année
+		for($mm=1;$mm<=12;$mm++) {
+			$fileName = $this->fileName.sprintf('%04d%02d',$YYYY,$mm).'.stats';
+			if (!file_exists($fileName)) {
+				continue;
+			}
+			$f = fopen($fileName,'r');
+			if (!$f)
+				continue;
+			flock($f,LOCK_EX);
+			$r = fgets($f);
+			fclose($f);
+			$tStats = @unserialize($r);
+			if ($tStats === false)
+				continue;
+			foreach($tStats as $day=>$tTypeCnx) {
+				foreach($tTypeCnx as $typeCnx=>$tValues) {
+					if (isset($this->stats[$day][$typeCnx])) {
+						$this->stats[$day][$typeCnx]['count']+=$tValues['count'];
+						$this->stats[$day][$typeCnx]['duration']+=$tValues['duration'];
+					} else {
+						$this->stats[$day][$typeCnx]['count']=$tValues['count'];
+						$this->stats[$day][$typeCnx]['duration']=$tValues['duration'];
+					}
+				}
+			}
+		}
 	}
 }
