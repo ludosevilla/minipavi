@@ -758,7 +758,7 @@ do {
 			break;
 		case InCnx::WS_TELNSOCKET:
 			$objMiniPavi->log("***CNX*** TELN from $ip UID=".$objMiniPavi->uniqueId);
-			$vdt.=MiniPavi::VDT_CLR.MiniPavi::VDT_POS.'@A'.'MiniPAVI '.PAVI_VER.'TELN '.date('d/m/Y H:i').MiniPavi::VDT_CLRLN.MiniPavi::VDT_PRO3_ECHO_OFF;			
+			$vdt.=MiniPavi::VDT_CLR.MiniPavi::VDT_POS.'@A'.'MiniPAVI '.PAVI_VER.'TELN '.date('d/m/Y H:i').MiniPavi::VDT_CLRLN;			
 			break;
 		default:
 			if ($objMiniPavi->inCnx->pce->enabled) {
