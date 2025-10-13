@@ -116,7 +116,7 @@ class WebSocket {
 		
 		$toSend = '';
 		
-		while (strlen($socketDatas)>0) {
+		do {
 			$header = '';
 			$datas = substr($socketDatas,0,65535);
 			$socketDatas = substr($socketDatas,65535);
@@ -142,7 +142,7 @@ class WebSocket {
 				}
 			}
 			$toSend.=$header.$datas;
-		}
+		} while (strlen($socketDatas)>0);
 		return $toSend;
 	}
 
