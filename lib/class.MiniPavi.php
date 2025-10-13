@@ -1429,7 +1429,9 @@ class MiniPavi {
 				$this->currX=$this->command->param->x[$this->bufferIdx];
 				$this->count=0;
 			}
-			$vdt = self::getVdtPos($this->command->param->x[$this->bufferIdx],$this->currY).$this->buffer[$this->bufferIdx];
+			if (isset($this->command->param->char) && isset($this->command->param->char[$this->bufferIdx]) && $this->command->param->char[$this->bufferIdx]!='') {
+				$vdt = self::getVdtPos($this->command->param->x[$this->bufferIdx],$this->currY).str_repeat($this->command->param->char[$this->bufferIdx], $this->count);
+			} else 	$vdt = self::getVdtPos($this->command->param->x[$this->bufferIdx],$this->currY).$this->buffer[$this->bufferIdx];
 			return $vdt;
 		}
 	}
