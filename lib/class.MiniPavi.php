@@ -1009,7 +1009,7 @@ class MiniPavi {
 		if (count($objCommand->param->prefill)>0) {
 			array_splice($objCommand->param->prefill, $height);
 			foreach($objCommand->param->prefill as $numLine=>$line) {
-				$objCommand->param->prefill[$numLine] = mb_substr($line,0,$width);
+				$objCommand->param->prefill[$numLine] = $this->toG2(mb_substr($line,0,$width));
 				$this->buffer[$numLine] = $objCommand->param->prefill[$numLine];
 			}
 		}
@@ -1060,10 +1060,11 @@ class MiniPavi {
 		// Eventuel pré-remplissage de la zone
 		
 		if ($preFillLines > 0) {
-			$extVdt.= self::getVdtPos($posX+mb_strlen($objCommand->param->prefill[$preFillLines-1]),$posY+($preFillLines-1));
-			$this->currX+=mb_strlen($objCommand->param->prefill[$preFillLines-1]);
+			$l = mb_strlen($this->fromG2($objCommand->param->prefill[$preFillLines-1]));
+			$extVdt.= self::getVdtPos($posX+$l,$posY+($preFillLines-1));
+			$this->currX+=$l;
 			$this->currY+=$preFillLines-1;
-			$this->count=mb_strlen($objCommand->param->prefill[$preFillLines-1]);
+			$this->count=$l;
 		} else {
 			$extVdt.= self::getVdtPos($posX,$posY);
 		}
@@ -1110,7 +1111,7 @@ class MiniPavi {
 		if (count($objCommand->param->prefill)>0) {
 			array_splice($objCommand->param->prefill, $cX);
 			foreach($objCommand->param->prefill as $numLine=>$line) {
-				$objCommand->param->prefill[$numLine] = mb_substr($line,0,$objCommand->param->l[$numLine]);
+				$objCommand->param->prefill[$numLine] = $this->toG2(mb_substr($line,0,$objCommand->param->l[$numLine]));
 				$this->buffer[$numLine] = $objCommand->param->prefill[$numLine];
 			}
 		}
@@ -1140,10 +1141,11 @@ class MiniPavi {
 			$extVdt.= $this->toG2(@$this->command->param->prefill[$i]);
 		}
 		
-		$this->currX=$objCommand->param->x[0] + mb_strlen($this->buffer[0]);
+
+		$this->currX=$objCommand->param->x[0] + mb_strlen($this->fromG2($this->buffer[0]));
 		$this->currY=$objCommand->param->y[0];
 		$extVdt.= self::getVdtPos($this->currX,$this->currY);
-		$this->count=mb_strlen($this->buffer[0]);
+		$this->count=mb_strlen($this->fromG2($this->buffer[0]));
 		$this->bufferIdx=0;
 
 		if ($objCommand->param->cursor == 'on')
