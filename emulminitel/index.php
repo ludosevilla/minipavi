@@ -76,7 +76,7 @@ if (!isset($_REQUEST['url'])) {
 			<br/>
 			(sauf en cas d'accès direct à un service)
 			<br/><br/>
-		<?}?>
+		<?php } ?>
 		Plus d'infos sur MiniPAVI - <a href="https://www.minipavi.fr/" style="color:white;" target="_blank">https://www.minipavi.fr/</a>
 		<br/>Emulateur Minitel Frédéric BISSON (version modifiée MiniPavi) - <a href="https://minitel.cquest.org/" style="color:white;" target="_blank">https://minitel.cquest.org/</a>
 		<br/><br/>
