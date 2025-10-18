@@ -427,7 +427,7 @@ if ($objConfig->wssPort > 0) {
 	trigger_error ("[MiniPavi-Main] TCP/WSS Attente connexions port ".$objConfig->wssPort." ...");
 }
 
-// Pour Socket Telnet (pour connexion depuis Asterisk)
+// Pour Socket "AST" (pour connexion depuis Asterisk)
 if ($objConfig->astPort > 0) {
 	$inCnxRTC = new InCnxRTC();
 	$tSocketsSer[1] = $inCnxRTC->setServerSocket(port: $objConfig->astPort);
@@ -440,11 +440,11 @@ if ($objConfig->astPort > 0) {
 // Pour Socket Telnet standard
 if ($objConfig->tcpPort > 0) {
 	$inCnxTelnet = new InCnxTelnet();
-	$tSocketsSer[3] = $inCnxRTC->setServerSocket(port: $objConfig->tcpPort);
+	$tSocketsSer[3] = $inCnxTelnet->setServerSocket(port: $objConfig->tcpPort);
 	if (!$tSocketsSer[3]) {
-		trigger_error ("[MiniPavi-Main] La création socket TCP websock a échouée...");
+		trigger_error ("[MiniPavi-Main] La création socket TCP telnet a échouée...");
 	}
-	trigger_error ("[MiniPavi-Main] TCP Attente connexions port ".$objConfig->tcpPort." ...");
+	trigger_error ("[MiniPavi-Main] TCP/Telnet Attente connexions port ".$objConfig->tcpPort." ...");
 }
 
 
