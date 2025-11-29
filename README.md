@@ -21,7 +21,7 @@ La fonction « WebMedia » intégrée permet aux services d’envoyer du conte
 Le projet contient essentiellement 5 parties :
 
 - La passerelle MiniPavi (PHP) à installer sur un système type Linux (Ubuntu etc.). Un simple Raspberry peut faire l'affaire.
-- Le module soft modem (C) pour [Asterisk](https://www.asterisk.org/) et des exemples de fichiers de configuration, à installer sur un système type Rapsberry
+- Le module soft modem (C) pour [Asterisk](https://www.asterisk.org/) et des exemples de fichiers de configuration, à installer également sur un système type Linux. Là encore, un Raspi suffit et peut être le même que celui utilisé pour la passerelle.
 - Un émulateur Minitel (PHP,HTML,JS,CSS) à installer sur un hébérgement web/PHP
 - L'interface WebMedia (PHP,HTML,JS,CSS) à installer sur un hébérgement web/PHP
 - Deux "services" (PHP) à installer sur un hébérgement web/PHP
