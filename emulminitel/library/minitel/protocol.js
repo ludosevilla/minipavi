@@ -80,6 +80,12 @@ Minitel.Protocol = class {
     getVersion() {
     }
 
+//sp@
+	setSpeed(speed) {
+	}
+	setColor(color) {
+	}
+	
     /**
      * Set the uppercase mode of the keyboard
      * @param {boolean} bool true indicates the keyboard operates in uppercase

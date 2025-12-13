@@ -835,9 +835,12 @@ Minitel.states =  {
     },
 
 	
+	//sp@
     "pro2": {
         0x69: { goto: "startFunction" },
-        0x6A: { goto: "stopFunction" }
+        0x6A: { goto: "stopFunction" },
+		0x10: { goto: "startSpeed"},
+		0x11: { goto: "startColor"},		
     },
 
     "startFunction": {
@@ -853,6 +856,19 @@ Minitel.states =  {
         0x46: { notImplemented: "stopUpZoom" },
         0x47: { notImplemented: "stopDownZoom" }
     },
+	
+	//sp@
+    "startSpeed": {
+		0x01: {func: "setSpeed", arg: "1200"},
+		0x02: {func: "setSpeed", arg: "4800"},
+		0x03: {func: "setSpeed", arg: "9600"},
+		0x04: {func: "setSpeed", arg: "FULL"}
+	},
+
+    "startColor": {
+		0x01: {func: "setColor", arg: false},
+		0x02: {func: "setColor", arg: true}
+	},
 
     "pro3": {
         0x60: { goto: "pro3SwitchOff" },

@@ -421,6 +421,24 @@ Minitel.Decoder = class extends Minitel.Protocol {
 		}
     }
 
+//sp@
+	setSpeed(speed) {
+		this.keyboard.selectSpeed(speed)
+		var color = this.keyboard.pageConfig.querySelector('.config-color>select').value;
+        this.keyboard.config({
+            speed: speed === "FULL" ? 0 : parseInt(speed),
+			color: color === "true"
+        })		
+	}
+	setColor(color) {
+		this.keyboard.selectColor(color)
+		var speed = this.keyboard.pageConfig.querySelector('.config-speed>select').value
+        this.keyboard.config({
+            speed: speed === "FULL" ? 0 : parseInt(speed),
+			color: color 
+        })		
+	}
+
 
     /**
      * Set the uppercase mode of the keyboard
