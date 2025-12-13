@@ -1,5 +1,45 @@
-L'émulateur Minitel est une version légèrement modifiée de celui réalisé et proposé par Fréderic Bisson.
+# Émulateur Minitel (MiniPavi)
 
-L'émulateur d'origine (avec un éditeur de page  videotex) est disponible sur ce dépôt :
+Cet émulateur Minitel est une version légèrement modifiée de celui
+réalisé et proposé par **Frédéric Bisson**.
 
-https://github.com/Zigazou/miedit
+L'émulateur d'origine, incluant un éditeur de pages vidéotex,
+est disponible ici :
+
+👉 https://github.com/Zigazou/miedit
+
+## Fonctionnalités spécifiques à cette version
+
+Cette version ajoute les fonctionnalités suivantes :
+
+- Correction de petits bugs mineurs
+- Support du **WebMedia** de MiniPavi
+- Mise en pause du flux de données
+- Enregistrement du flux de données
+- Réponse à la demande d'identification en tant que modèle **EmU**
+- Support de séquences **PRO2** spécifiques pour :
+  - le changement de vitesse de l'émulateur
+  - le changement du mode d'affichage (couleur / noir et blanc) de l'émulateur
+
+## Séquences PRO2 spécifiques à l'émulateur
+
+### Vitesse de transmission
+
+| Séquence | Vitesse |
+|--------|--------|
+| `PRO2 / 0x10 / 0x01` | 1200 bds |
+| `PRO2 / 0x10 / 0x02` | 4800 bds |
+| `PRO2 / 0x10 / 0x03` | 9600 bds |
+| `PRO2 / 0x10 / 0x04` | Vitesse maximale |
+
+### Mode d'affichage
+
+| Séquence | Mode |
+|--------|------|
+| `PRO2 / 0x11 / 0x01` | Noir et blanc |
+| `PRO2 / 0x11 / 0x02` | Couleur |
+
+### Rappel
+
+```text
+PRO2 = 0x1B 0x3A
