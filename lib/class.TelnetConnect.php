@@ -126,20 +126,22 @@ class TelnetConnect {
 							}
 							
 						} else {	// Données reçues de l'utilisateur
-							trigger_error("[MiniPavi-TelnetConnect] RX depuis utilisateur");
-							
-							$userBuff.=$socketData;
-							if (str_contains($userBuff,'***'."\x13\x46") || str_contains($userBuff,"\x13\x49")  ) {
-								$stop =true;
-							}
-							$l=strlen($userBuff)-5;
-							if ($l>0) $userBuff = substr($userBuff,$l);
-							
-							if (@fwrite($serverSocket,$socketData) === false)	{ // Envoi vers le serveur TELNET
-								$stop =true;
-							}
-							if ($echo =='on') {
-								$objMiniPaviC->inCnx->send($socketData,$objMiniPaviC);
+							if ($socketData !== true) {
+								trigger_error("[MiniPavi-TelnetConnect] RX depuis utilisateur");
+								
+								$userBuff.=$socketData;
+								if (str_contains($userBuff,'***'."\x13\x46") || str_contains($userBuff,"\x13\x49")  ) {
+									$stop =true;
+								}
+								$l=strlen($userBuff)-5;
+								if ($l>0) $userBuff = substr($userBuff,$l);
+								
+								if (@fwrite($serverSocket,$socketData) === false)	{ // Envoi vers le serveur TELNET
+									$stop =true;
+								}
+								if ($echo =='on') {
+									$objMiniPaviC->inCnx->send($socketData,$objMiniPaviC);
+								}
 							}
 						}
 					}

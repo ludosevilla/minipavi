@@ -182,7 +182,7 @@ class WSConnect {
 							
 						} else {	// Données reçues de l'utilisateur
 							trigger_error("[MiniPavi-WSConnect] RX depuis Utilisateur");
-							if ($socketData!='') {
+							if ($socketData!='' && $socketData!==true) {
 								$userBuff.=$socketData;
 								if (str_contains($userBuff,'***'."\x13\x46") || str_contains($userBuff,"\x13\x49") ) {
 									trigger_error("[MiniPavi-WSConnect] Fin de connexion demandée");
