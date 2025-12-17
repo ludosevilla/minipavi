@@ -27,17 +27,17 @@ Cette version ajoute les fonctionnalités suivantes :
 
 | Séquence | Vitesse |
 |--------|--------|
-| `PRO2 / 0x10 / 0x01` | 1200 bds |
-| `PRO2 / 0x10 / 0x02` | 4800 bds |
-| `PRO2 / 0x10 / 0x03` | 9600 bds |
-| `PRO2 / 0x10 / 0x04` | Vitesse maximale |
+| `PRO2 / 0x10 / 0x41` | 1200 bds |
+| `PRO2 / 0x10 / 0x42` | 4800 bds |
+| `PRO2 / 0x10 / 0x43` | 9600 bds |
+| `PRO2 / 0x10 / 0x44` | Vitesse maximale |
 
 ### Mode d'affichage
 
 | Séquence | Mode |
 |--------|------|
-| `PRO2 / 0x11 / 0x01` | Noir et blanc |
-| `PRO2 / 0x11 / 0x02` | Couleur |
+| `PRO2 / 0x11 / 0x41` | Noir et blanc |
+| `PRO2 / 0x11 / 0x42` | Couleur |
 
 ### Rappel
 
