@@ -859,15 +859,15 @@ Minitel.states =  {
 	
 	//sp@
     "startSpeed": {
-		0x01: {func: "setSpeed", arg: "1200"},
-		0x02: {func: "setSpeed", arg: "4800"},
-		0x03: {func: "setSpeed", arg: "9600"},
-		0x04: {func: "setSpeed", arg: "FULL"}
+		0x41: {func: "setSpeed", arg: "1200"},
+		0x42: {func: "setSpeed", arg: "4800"},
+		0x43: {func: "setSpeed", arg: "9600"},
+		0x44: {func: "setSpeed", arg: "FULL"}
 	},
 
     "startColor": {
-		0x01: {func: "setColor", arg: false},
-		0x02: {func: "setColor", arg: true}
+		0x41: {func: "setColor", arg: false},
+		0x42: {func: "setColor", arg: true}
 	},
 
     "pro3": {
