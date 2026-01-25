@@ -27,7 +27,7 @@ class WSConnect {
 	// Retourne 0 si ok, sinon -1 
 	*************************************************/
 	
-	static public function linkTo($myHost,$host,$objMiniPaviC,$path='/',$echo='off',$case='lower',$proto='') {
+	static public function linkTo($myHost,$host,$objMiniPaviC,$objConfig,$path='/',$echo='off',$case='lower',$proto='') {
 		$serverSocket = @stream_socket_client($host, $errno, $errstr, 5,STREAM_CLIENT_CONNECT | STREAM_CLIENT_PERSISTENT);
 		if (!$serverSocket) {
 			trigger_error("[MiniPavi-WSConnect] Connexion à $host [$path] en echec [$errno $errstr]");
@@ -169,7 +169,7 @@ class WSConnect {
 							}
 							trigger_error("[MiniPavi-WSConnect] Envoi -> Utilisateur");
 							$l=strlen($serverBuff)-20;
-							if ($l>0) $serverBuff = substr($userBuff,$l);
+							if ($l>0) $serverBuff = substr($serverBuff,$l);
 							
 							$outDatasTmp.=$socketData;		// Tant que l'on reçoit du serveur, on stock (max 25 octets) avant d'envoyer plus tard à l'utilisateur
 							
@@ -187,6 +187,26 @@ class WSConnect {
 								if (str_contains($userBuff,'***'."\x13\x46") || str_contains($userBuff,"\x13\x49") ) {
 									trigger_error("[MiniPavi-WSConnect] Fin de connexion demandée");
 									$stop =true;
+								} else if ($objConfig->screenShot && str_contains(strtoupper($userBuff),"\x0D".$objConfig->captureKey) ) {
+									// Sauvegarde buffer écran
+									trigger_error("[MiniPavi-WSConnect] Capture ...");
+									$userBuff = str_replace("\x0D".strtolower($objConfig->captureKey), "", $userBuff);
+									$userBuff = str_replace("\x0D".$objConfig->captureKey, "", $userBuff);
+									$fList = $objMiniPaviC->listScreenBuffers($objConfig->recordsPath);
+									if (count($fList)>=$objConfig->captureMax) {
+										$objMiniPaviC->addToBufferOut(MiniPavi::VDT_POS.'@A'.$objMiniPaviC->toG2($objConfig->captureMsgMax).MiniPavi::VDT_CLRLN."\x0A");													
+									} else {
+										if ($objMiniPaviC->saveScreenBuffer($objConfig->recordsPath)) {
+											$objMiniPaviC->addToBufferOut(MiniPavi::VDT_POS.'@A'.$objMiniPaviC->toG2($objConfig->captureMsg).MiniPavi::VDT_CLRLN."\x0A");			
+										} else {
+											$objMiniPaviC->addToBufferOut(MiniPavi::VDT_POS.'@A'.$objMiniPaviC->toG2('Capture KO').MiniPavi::VDT_CLRLN."\x0A");			
+										}
+									}
+									// On force l'envoi
+									$outDatasTmp = $objMiniPaviC->prepareSendToUser();
+									$objMiniPaviC->inCnx->send($outDatasTmp,$objMiniPaviC);	// Envoi vers l'utilisateur								
+									$outDatasTmp='';
+									
 								}
 								$l=strlen($userBuff)-5;
 								if ($l>0) $userBuff = substr($userBuff,$l);
@@ -204,6 +224,7 @@ class WSConnect {
 										$socketData=chr(0x13).$socketData;
 										$sepChar=false;
 									}
+									$socketData = str_replace("\r", "", $socketData);
 									if (self::write($serverSocket, $socketData) === false ) { // Envoi vers le serveur WS
 										trigger_error("[MiniPavi-WSConnect] Erreur envoi vers serveur");
 										$stop =true;

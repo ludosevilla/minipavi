@@ -42,7 +42,7 @@ class AstAMI {
 	** Retourne 0 si ok, sinon -1
 	****************************/
 
-	static public function startCall($numero,$fromPid,$objMiniPaviC,$RX,$TX,$tConfigAsterisk) {
+	static public function startCall($numero,$fromPid,$objMiniPaviC,$RX,$TX,$tConfigAsterisk,$objConfig) {
 
 		if (@$tConfigAsterisk['sipchannel']=='')
 			return -1;
@@ -288,7 +288,29 @@ class AstAMI {
 							$userBuff.=$socketData;
 							if (str_contains($userBuff,'***'."\x13\x46") || str_contains($userBuff,"\x13\x49") ) {
 								$stop =true;
+							} else if ($objConfig->screenShot && str_contains(strtoupper($userBuff),"\x0D".$objConfig->captureKey) ) {								
+								// Sauvegarde buffer écran
+								trigger_error("[MiniPavi-AMICall] Capture ...");
+								$userBuff = str_replace("\x0D".strtolower($objConfig->captureKey), "", $userBuff);
+								$userBuff = str_replace("\x0D".$objConfig->captureKey, "", $userBuff);
+								$fList = $objMiniPaviC->listScreenBuffers($objConfig->recordsPath);
+								if (count($fList)>=$objConfig->captureMax) {
+									$objMiniPaviC->addToBufferOut(MiniPavi::VDT_POS.'@A'.$objMiniPaviC->toG2($objConfig->captureMsgMax).MiniPavi::VDT_CLRLN."\x0A");																						
+								} else {
+									if ($objMiniPaviC->saveScreenBuffer($objConfig->recordsPath)) {
+										$objMiniPaviC->addToBufferOut(MiniPavi::VDT_POS.'@A'.$objMiniPaviC->toG2($objConfig->captureMsg).MiniPavi::VDT_CLRLN."\x0A");			
+										
+									} else {
+										$objMiniPaviC->addToBufferOut(MiniPavi::VDT_POS.'@A'.$objMiniPaviC->toG2('Capture KO').MiniPavi::VDT_CLRLN."\x0A");			
+									}
+								}
+								// On force l'envoi
+								$outDatasTmp = $objMiniPaviC->prepareSendToUser();
+								$objMiniPaviC->inCnx->send($outDatasTmp,$objMiniPaviC);	// Envoi vers l'utilisateur
+								$outDatasTmp='';
+								
 							}
+
 							
 							if (strlen($userBuff)>5)
 								$userBuff = substr($userBuff,-5);

@@ -41,7 +41,12 @@ class MinipaviCfg {
 	public $visuKey;
 	public $tVisuwebAllowIp;
 	public $viewer;
+	public $hlbrowser;
+	public $captureKey;
+	public $captureMsg;	
+	public $captureMax;	
 	public $screenSaver;
+	public $screenShot;
 
 
 	/*************************************************
@@ -52,6 +57,7 @@ class MinipaviCfg {
 		$this->tExtCnxKeys=array();
 		$this->tAsterisk=array();
 		$this->tVisuwebAllowIp=array();
+		$this->screenShot=false;
 	}
 
 
@@ -75,7 +81,11 @@ class MinipaviCfg {
 			if ($elementName == 'recordings') {
 				$this->readRecordings($obj);
 			}
+			if ($elementName == 'capture') {
+				$this->readCapture($obj);
+			}
 			
+
 		}
 		return true;
 	}
@@ -136,6 +146,17 @@ class MinipaviCfg {
 	
 	private function readRecordings($obj) {
 		$this->recordsPath = trim(@$obj->rpath);		
+	}
+
+	private function readCapture($obj) {
+		$this->hlbrowser = trim(@$obj->hlbrowser);
+		$this->captureKey = strtoupper(substr(trim(@$obj->key),0,1));
+		$this->captureMsg = trim(@$obj->message);
+		$this->captureMax = (int)(@$obj->max);
+		$this->captureMsgMax = trim(@$obj->messagemax);
+		if ($this->hlbrowser!='' && $this->captureKey!='' && $this->captureMsg!='' && $this->captureMsgMax!='' && $this->captureMax>0) 
+			$this->screenShot=true;
+		else $this->screenShot=false;
 	}
 	
 }

@@ -25,7 +25,7 @@ class TelnetConnect {
 	// Retourne 0 si ok, sinon -1 
 	*************************************************/
 	
-	static public function linkTo($host,$objMiniPaviC,$echo='off',$case='lower',$startSeq='') {
+	static public function linkTo($host,$objMiniPaviC,$objConfig,$echo='off',$case='lower',$startSeq='') {
 		$serverSocket = @stream_socket_client('tcp://'.$host, $errno, $errstr, 5);
 		if (!$serverSocket) {
 			trigger_error("[MiniPavi-TelnetConnect] Connexion à $host en echec");
@@ -112,8 +112,9 @@ class TelnetConnect {
 								}
 							}
 							
+							
 							$l=strlen($serverBuff)-20;
-							if ($l>0) $serverBuff = substr($userBuff,$l);
+							if ($l>0) $serverBuff = substr($serverBuff,$l);
 							
 							
 							$outDatasTmp.=$socketData;		// Tant que l'on reçoit du serveur, on stock avant d'envoyer plus tard à l'utilisateur
@@ -132,10 +133,34 @@ class TelnetConnect {
 								$userBuff.=$socketData;
 								if (str_contains($userBuff,'***'."\x13\x46") || str_contains($userBuff,"\x13\x49")  ) {
 									$stop =true;
+								} else if ($objConfig->screenShot && str_contains(strtoupper($userBuff),"\x0D".$objConfig->captureKey) ) {																	
+									// Sauvegarde buffer écran
+									trigger_error("[MiniPavi-TelnetConnect] Capture ...");
+									$userBuff = str_replace("\x0D".strtolower($objConfig->captureKey), "", $userBuff);
+									$userBuff = str_replace("\x0D".$objConfig->captureKey, "", $userBuff);
+									$fList = $objMiniPaviC->listScreenBuffers($objConfig->recordsPath);
+									if (count($fList)>=$objConfig->captureMax) {
+										$objMiniPaviC->addToBufferOut(MiniPavi::VDT_POS.'@A'.$objMiniPaviC->toG2($objConfig->captureMsgMax).MiniPavi::VDT_CLRLN."\x0A");													
+									} else {
+										if ($objMiniPaviC->saveScreenBuffer($objConfig->recordsPath)) {
+											$objMiniPaviC->addToBufferOut(MiniPavi::VDT_POS.'@A'.$objMiniPaviC->toG2($objConfig->captureMsg).MiniPavi::VDT_CLRLN."\x0A");			
+											
+										} else {
+											$objMiniPaviC->addToBufferOut(MiniPavi::VDT_POS.'@A'.$objMiniPaviC->toG2('Capture KO').MiniPavi::VDT_CLRLN."\x0A");			
+										}
+									}
+									// On force l'envoi
+									$outDatasTmp = $objMiniPaviC->prepareSendToUser();
+									$objMiniPaviC->inCnx->send($outDatasTmp,$objMiniPaviC);	// Envoi vers l'utilisateur
+									$outDatasTmp='';
+									
 								}
+
 								$l=strlen($userBuff)-5;
 								if ($l>0) $userBuff = substr($userBuff,$l);
 								
+								$socketData = str_replace("\r", "", $socketData);
+								trigger_error("[MiniPavi-TelnetConnect] Envoi depuis utilisateur : $socketData");
 								if (@fwrite($serverSocket,$socketData) === false)	{ // Envoi vers le serveur TELNET
 									$stop =true;
 								}

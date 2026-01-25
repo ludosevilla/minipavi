@@ -16,6 +16,7 @@
  * 11/10/2024 : ajout addCommandInputForm
  * 08/07/2025 : ajout addCommandSetParam
  * 12/10/2025 : ajout de la possibilité de champs "mot de passe" dans la saisie de formulaires (addCommandInputForm)
+ * 23/12/2025 : ajout des commandes addCommandGetScreen et addCommandGetScreenList
  */
 
 
@@ -155,6 +156,8 @@ class MiniPavi {
 	private $fRecord;
 	public $objWebMedia;
 	public $timeout;
+	
+	public $datas;
 	
 	
 	
@@ -374,6 +377,7 @@ class MiniPavi {
 		} else $toSend['PAVI']['typesocket']='';
 		$toSend['PAVI']['versionminitel']=$this->versionMinitel;
 		$toSend['PAVI']['content']=$this->buffer;		
+		$toSend['PAVI']['datas']=$this->datas;				
 		$toSend['PAVI']['context']= mb_convert_encoding($this->context,'UTF-8');		
 		$toSend['PAVI']['fctn']=$fctn;
 		if (is_array($urlParams) && count($urlParams)>0)
@@ -480,7 +484,7 @@ class MiniPavi {
 	// fctn: retour de la touche de fonction pressée le cas échéant
 	*************************************************/
 	
-	function receiveFromUser($inDatas,&$fctn,$simulate=false) {
+	function receiveFromUser($inDatas,&$fctn,$objConfig,$simulate=false) {
 		
 		if ($simulate) {
 			if (strpos($inDatas,'WMLASTEVENT/') === 0) {
@@ -523,244 +527,264 @@ class MiniPavi {
 		$lengthDatas = strlen($inDatas);
 		
 		for($idxDatas=0;$idxDatas<$lengthDatas;$idxDatas++) {
-			$skipChar=false;
 			$input = $inDatas[$idxDatas];
 
 			$code = ord($input);
-			if ($code==19) {
+			if ($code==13) {
 				$idxDatas++;
 				if ($idxDatas==$lengthDatas) {
-						//Touche fonction tronquée
+						//Touche fonction "secondaire" tronquée
 						$this->tempBuffer=$inDatas;
 						return;
 				}
 				$input = $inDatas[$idxDatas];
-				$code = ord($input);
+				if ($objConfig->screenShot && strtoupper($input) == $objConfig->captureKey ) {
+					// Print
 
-				switch ($code) {
-					case self::FCT_SOMMAIRE:
-						if ($this->command) {
-							switch($this->command->name) {
-								case 'InputTxt':
-									if(($this->command->param->validwith & self::MSK_SOMMAIRE) == 0) 
-										return;
-									break;
-								case 'InputMsg':
-									if(($this->command->param->validwith & self::MSK_SOMMAIRE) == 0) 
-										return;
-									break;
-							}
+					$fList = $this->listScreenBuffers($objConfig->recordsPath);
+					if (count($fList)>=$objConfig->captureMax) {
+						$this->addToBufferOut(MiniPavi::VDT_POS.'@A'.$this->toG2($objConfig->captureMsgMax).MiniPavi::VDT_CLRLN."\x0A");			
+					} else {
+						if ($this->saveScreenBuffer($objConfig->recordsPath)) {
+							$this->addToBufferOut(MiniPavi::VDT_POS.'@A'.$this->toG2($objConfig->captureMsg).MiniPavi::VDT_CLRLN."\x0A");			
+						} else {
+							$this->addToBufferOut(MiniPavi::VDT_POS.'@A'.$this->toG2('Capture KO').MiniPavi::VDT_CLRLN."\x0A");			
+							
 						}
-						$fctn="SOMMAIRE";
-						break;
-					case self::FCT_ANNULATION:
-						if ($this->command) {
-							switch($this->command->name) {
-								case 'InputTxt':
-									$this->addToBufferOut($this->processAnnulationInputTxt());
-									break;
-								case 'InputMsg':
-									$this->addToBufferOut($this->processAnnulationInputMsg());								
-									break;
-								case 'InputForm':
-									$this->addToBufferOut($this->processAnnulationInputForm());								
-									break;
-								default:
-									$fctn="ANNULATION";
-									break;
-							}
-						} else 
-							$fctn="ANNULATION";
-						
-						break;
-					case self::FCT_SUITE:
-						if ($this->command) {
-							switch($this->command->name) {
-								case 'InputMsg':
-									$this->addToBufferOut($this->processSuiteInputMsg());
-									break;
-								case 'InputForm':
-									$this->addToBufferOut($this->processSuiteInputForm());
-									break;
-								case 'InputTxt':
-									if(($this->command->param->validwith & self::MSK_SUITE) == 0) 
-										return;
-								default:
-									$fctn="SUITE";
-									break;
-							}
-						} else 
-							$fctn="SUITE";
-						
-						break;
-					case self::FCT_RETOUR:
-						if ($this->command) {
-							switch($this->command->name) {
-								case 'InputMsg':
-									$this->addToBufferOut($this->processRetourInputMsg());
-									break;
-								case 'InputForm':
-									$this->addToBufferOut($this->processRetourInputForm());
-									break;
-								case 'InputTxt':
-									if(($this->command->param->validwith & self::MSK_RETOUR) == 0) 
-										return;
-								default:
-									$fctn="RETOUR";
-									break;
-							}
-						} else 
-							$fctn="RETOUR";
-						break;
-					case self::FCT_REPETITION:
-						if ($this->command) {
-							switch($this->command->name) {
-								case 'InputTxt':
-									if(($this->command->param->validwith & self::MSK_REPETITION) == 0) 
-										return;
-									break;
-								case 'InputMsg':
-									if(($this->command->param->validwith & self::MSK_REPETITION) == 0) 
-										return;
-									break;
-								case 'InputForm':
-									if(($this->command->param->validwith & self::MSK_REPETITION) == 0) 
-										return;
-									break;
-							}
-						}
-					
-						$fctn="REPETITION";
-						break;
-					
-					case self::FCT_GUIDE:
-						
-						if ($this->command) {
-							switch($this->command->name) {
-								case 'InputTxt':
-									if(($this->command->param->validwith & self::MSK_GUIDE) == 0) 
-										return;
-									break;
-								case 'InputMsg':
-									if(($this->command->param->validwith & self::MSK_GUIDE) == 0) 
-										return;
-									break;
-								case 'InputForm':
-									if(($this->command->param->validwith & self::MSK_GUIDE) == 0) 
-										return;
-									break;
-							}
-						}
-					
-						$fctn="GUIDE";
-						break;
-					case self::FCT_CORRECTION:
-						if ($this->command) {
-							switch($this->command->name) {
-								case 'InputTxt':
-									$this->addToBufferOut($this->processCorrectionInputTxt());
-									break;
-								case 'InputMsg':
-									$this->addToBufferOut($this->processCorrectionInputMsg());
-									break;
-								case 'InputForm':
-									$this->addToBufferOut($this->processCorrectionInputForm());
-									break;
-									
-								default:
-									$fctn="CORRECTION";
-									break;
-							}
-						} else 
-							$fctn="CORRECTION";
-						
-						break;
-					case self::FCT_ENVOI:
-						if ($this->command) {
-							switch($this->command->name) {
-								case 'InputTxt':
-									if(($this->command->param->validwith & self::MSK_ENVOI) == 0) 
-										return;
-									break;
-								case 'InputMsg':
-									if(($this->command->param->validwith & self::MSK_ENVOI) == 0) 
-										return;
-									break;
-								case 'InputForm':
-									if(($this->command->param->validwith & self::MSK_ENVOI) == 0) 
-										return;
-									break;
-							}
-						}
-						$fctn="ENVOI";
-						break;
-					case self::FCT_CNX:
-					case self::FCT_CNX2:
-						$fctn="FIN";
-						break;
-					default:
-						// Touche de fonction inconnue
-						trigger_error("[MiniPavi-class] Touche de fonction inconnue");
-						break;
+					}
+				} else {
+					trigger_error("[MiniPavi-class] Fctn secondaire inconnue [$input]");
 				}
 			} else {
-				if ($this->command) {
-					switch($this->command->name) {
-						case 'InputTxt':
-							$oldLength = mb_strlen(self::fromG2(@$this->buffer[$this->bufferIdx]));
-							if ($this->count>=$this->command->param->l) {
-								$skipChar=true;
-							} else {
-								if (($code>=32 && $code<127) || $input==self::VDT_G2 || $code==8) {
-									@$this->buffer[$this->bufferIdx].=$input;
-									if ($this->echo)
-										if ($altChar!='') $this->addToBufferOut($altChar);
-										else $this->addToBufferOut($input);
-								}
-								$this->count = mb_strlen(self::fromG2(@$this->buffer[$this->bufferIdx]));
-								$this->currX+=($this->count-$oldLength);
-							}
-							break;
-						case 'InputMsg':
-							$oldLength = mb_strlen(self::fromG2(@$this->buffer[$this->bufferIdx]));
-							if ($this->count>=$this->command->param->w) {
-								$skipChar=true;
-							} else {
-								if (($code>=32 && $code<127) || $input==self::VDT_G2 || $code==8) {
-									@$this->buffer[$this->bufferIdx].=$input;
-									if ($this->echo)
-										if ($altChar!='') $this->addToBufferOut($altChar);
-										else $this->addToBufferOut($input);
-								}
-								$this->count = mb_strlen(self::fromG2(@$this->buffer[$this->bufferIdx]));
-								$this->currX+=($this->count-$oldLength);
-								if ($this->count>=$this->command->param->w) {
-									$this->addToBufferOut($this->processSuiteInputMsg());
+			
+				if ($code==19) {
+					$idxDatas++;
+					if ($idxDatas==$lengthDatas) {
+							//Touche fonction tronquée
+							$this->tempBuffer=$inDatas;
+							return;
+					}
+					$input = $inDatas[$idxDatas];
+					$code = ord($input);
+
+					switch ($code) {
+						case self::FCT_SOMMAIRE:
+							if ($this->command) {
+								switch($this->command->name) {
+									case 'InputTxt':
+										if(($this->command->param->validwith & self::MSK_SOMMAIRE) == 0) 
+											return;
+										break;
+									case 'InputMsg':
+										if(($this->command->param->validwith & self::MSK_SOMMAIRE) == 0) 
+											return;
+										break;
 								}
 							}
+							$fctn="SOMMAIRE";
 							break;
-						case 'InputForm':
-							$oldLength = mb_strlen(self::fromG2(@$this->buffer[$this->bufferIdx]));
-							if ($this->count>=$this->command->param->l[$this->bufferIdx]) {
-								$skipChar=true;
-							} else {
-								if (($code>=32 && $code<127) || $input==self::VDT_G2 || $code==8) {
-									@$this->buffer[$this->bufferIdx].=$input;
-									if ($this->echo)
-										if ($altChar!='') $this->addToBufferOut($altChar);
-										else $this->addToBufferOut($input);
+						case self::FCT_ANNULATION:
+							if ($this->command) {
+								switch($this->command->name) {
+									case 'InputTxt':
+										$this->addToBufferOut($this->processAnnulationInputTxt());
+										break;
+									case 'InputMsg':
+										$this->addToBufferOut($this->processAnnulationInputMsg());								
+										break;
+									case 'InputForm':
+										$this->addToBufferOut($this->processAnnulationInputForm());								
+										break;
+									default:
+										$fctn="ANNULATION";
+										break;
 								}
-								$this->count = mb_strlen(self::fromG2(@$this->buffer[$this->bufferIdx]));
-								$this->currX+=($this->count-$oldLength);
-							}
-							break;
+							} else 
+								$fctn="ANNULATION";
 							
-						default:
 							break;
+						case self::FCT_SUITE:
+							if ($this->command) {
+								switch($this->command->name) {
+									case 'InputMsg':
+										$this->addToBufferOut($this->processSuiteInputMsg());
+										break;
+									case 'InputForm':
+										$this->addToBufferOut($this->processSuiteInputForm());
+										break;
+									case 'InputTxt':
+										if(($this->command->param->validwith & self::MSK_SUITE) == 0) 
+											return;
+									default:
+										$fctn="SUITE";
+										break;
+								}
+							} else 
+								$fctn="SUITE";
+							
+							break;
+						case self::FCT_RETOUR:
+							if ($this->command) {
+								switch($this->command->name) {
+									case 'InputMsg':
+										$this->addToBufferOut($this->processRetourInputMsg());
+										break;
+									case 'InputForm':
+										$this->addToBufferOut($this->processRetourInputForm());
+										break;
+									case 'InputTxt':
+										if(($this->command->param->validwith & self::MSK_RETOUR) == 0) 
+											return;
+									default:
+										$fctn="RETOUR";
+										break;
+								}
+							} else 
+								$fctn="RETOUR";
+							break;
+						case self::FCT_REPETITION:
+							if ($this->command) {
+								switch($this->command->name) {
+									case 'InputTxt':
+										if(($this->command->param->validwith & self::MSK_REPETITION) == 0) 
+											return;
+										break;
+									case 'InputMsg':
+										if(($this->command->param->validwith & self::MSK_REPETITION) == 0) 
+											return;
+										break;
+									case 'InputForm':
+										if(($this->command->param->validwith & self::MSK_REPETITION) == 0) 
+											return;
+										break;
+								}
+							}
+						
+							$fctn="REPETITION";
+							break;
+						
+						case self::FCT_GUIDE:
+							
+							if ($this->command) {
+								switch($this->command->name) {
+									case 'InputTxt':
+										if(($this->command->param->validwith & self::MSK_GUIDE) == 0) 
+											return;
+										break;
+									case 'InputMsg':
+										if(($this->command->param->validwith & self::MSK_GUIDE) == 0) 
+											return;
+										break;
+									case 'InputForm':
+										if(($this->command->param->validwith & self::MSK_GUIDE) == 0) 
+											return;
+										break;
+								}
+							}
+						
+							$fctn="GUIDE";
+							break;
+						case self::FCT_CORRECTION:
+							if ($this->command) {
+								switch($this->command->name) {
+									case 'InputTxt':
+										$this->addToBufferOut($this->processCorrectionInputTxt());
+										break;
+									case 'InputMsg':
+										$this->addToBufferOut($this->processCorrectionInputMsg());
+										break;
+									case 'InputForm':
+										$this->addToBufferOut($this->processCorrectionInputForm());
+										break;
+										
+									default:
+										$fctn="CORRECTION";
+										break;
+								}
+							} else 
+								$fctn="CORRECTION";
+							
+							break;
+						case self::FCT_ENVOI:
+							if ($this->command) {
+								switch($this->command->name) {
+									case 'InputTxt':
+										if(($this->command->param->validwith & self::MSK_ENVOI) == 0) 
+											return;
+										break;
+									case 'InputMsg':
+										if(($this->command->param->validwith & self::MSK_ENVOI) == 0) 
+											return;
+										break;
+									case 'InputForm':
+										if(($this->command->param->validwith & self::MSK_ENVOI) == 0) 
+											return;
+										break;
+								}
+							}
+							$fctn="ENVOI";
+							break;
+						case self::FCT_CNX:
+						case self::FCT_CNX2:
+							$fctn="FIN";
+							break;
+						default:
+							// Touche de fonction inconnue
+							trigger_error("[MiniPavi-class] Touche de fonction inconnue");
+							break;
+					}
+				} else {
+					if ($this->command) {
+						switch($this->command->name) {
+							case 'InputTxt':
+								$oldLength = mb_strlen(self::fromG2(@$this->buffer[$this->bufferIdx]));
+								if ($this->count<$this->command->param->l) {
+									if (($code>=32 && $code<127) || $input==self::VDT_G2 || $code==8) {
+										@$this->buffer[$this->bufferIdx].=$input;
+										if ($this->echo)
+											if ($altChar!='') $this->addToBufferOut($altChar);
+											else $this->addToBufferOut($input);
+									}
+									$this->count = mb_strlen(self::fromG2(@$this->buffer[$this->bufferIdx]));
+									$this->currX+=($this->count-$oldLength);
+								}
+								break;
+							case 'InputMsg':
+								$oldLength = mb_strlen(self::fromG2(@$this->buffer[$this->bufferIdx]));
+								if ($this->count<$this->command->param->w) {								
+									if (($code>=32 && $code<127) || $input==self::VDT_G2 || $code==8) {
+										@$this->buffer[$this->bufferIdx].=$input;
+										if ($this->echo)
+											if ($altChar!='') $this->addToBufferOut($altChar);
+											else $this->addToBufferOut($input);
+									}
+									$this->count = mb_strlen(self::fromG2(@$this->buffer[$this->bufferIdx]));
+									$this->currX+=($this->count-$oldLength);
+									if ($this->count>=$this->command->param->w) {
+										$this->addToBufferOut($this->processSuiteInputMsg());
+									}
+								}
+								break;
+							case 'InputForm':
+								$oldLength = mb_strlen(self::fromG2(@$this->buffer[$this->bufferIdx]));
+								if ($this->count<$this->command->param->l[$this->bufferIdx]) {								
+									if (($code>=32 && $code<127) || $input==self::VDT_G2 || $code==8) {
+										@$this->buffer[$this->bufferIdx].=$input;
+										if ($this->echo)
+											if ($altChar!='') $this->addToBufferOut($altChar);
+											else $this->addToBufferOut($input);
+									}
+									$this->count = mb_strlen(self::fromG2(@$this->buffer[$this->bufferIdx]));
+									$this->currX+=($this->count-$oldLength);
+								}
+								break;
+								
+							default:
+								break;
+						}
 					}
 				}
 			}
-			
 			if ($fctn!='') {
 				$this->command =false;
 				return;
@@ -832,15 +856,15 @@ class MiniPavi {
 							break;
 						case 'connectToExt':
 							trigger_error ("[MiniPavi-class] commande connectToExt");
-							$returnVal = $this->addCommandConnectToExt(@$rJson->COMMAND,$tConfigAsterisk,$tExtCnxKeys);
+							$returnVal = $this->addCommandConnectToExt(@$rJson->COMMAND,$tConfigAsterisk,$objConfig,$tExtCnxKeys);
 							break;
 						case 'connectToTln':
 							trigger_error ("[MiniPavi-class] commande connectToTln");
-							$returnVal = $this->addCommandConnectToTln(@$rJson->COMMAND,$tExtCnxKeys,$requestedUrl);
+							$returnVal = $this->addCommandConnectToTln(@$rJson->COMMAND,$objConfig,$tExtCnxKeys,$requestedUrl);
 							break;
 						case 'connectToWs':
 							trigger_error ("[MiniPavi-class] commande connectToWs");
-							$returnVal = $this->addCommandConnectToWs(@$rJson->COMMAND,$objConfig->host,$tExtCnxKeys,$requestedUrl);
+							$returnVal = $this->addCommandConnectToWs(@$rJson->COMMAND,$objConfig,$tExtCnxKeys,$requestedUrl);
 							break;
 						case 'duplicateStream':
 							trigger_error ("[MiniPavi-class] commande duplicateStream");
@@ -849,6 +873,22 @@ class MiniPavi {
 						case 'setParam':
 							trigger_error ("[MiniPavi-class] commande setParam");
 							$this->addCommandSetParam(@$rJson->COMMAND);
+							break;
+						case 'getScreen':
+							trigger_error ("[MiniPavi-class] commande getScreen");
+							$this->datas = $this->addCommandGetScreen(@$rJson->COMMAND,$objConfig);
+							if ($this->datas == false) {
+								$this->datas = array('item'=>'getscreen','result'=>false);
+							} else {
+								$this->datas = array('item'=>'getscreen','result'=>true,'seq'=>@$rJson->COMMAND->param->seq,'datas'=>base64_encode($this->datas));
+							}
+							$returnVal = -2;
+							break;
+						case 'getScreenList':
+							trigger_error ("[MiniPavi-class] commande getScreenList");
+							$this->datas = $this->addCommandGetScreenList(@$rJson->COMMAND,$objConfig);
+							$this->datas = array('item'=>'getscreenlist','result'=>true,'datas'=>$this->datas);
+							$returnVal = -2;
 							break;
 						case 'libCnx':		
 							trigger_error ("[MiniPavi-class] commande déconnexion");
@@ -893,6 +933,8 @@ class MiniPavi {
 				return 3;		// appel type DIRECTCALLFAILED
 			if ($returnVal == 0)
 				return 4;		// appel type DIRECTCALLENDED
+			if ($returnVal == -2)
+				return 5;		// appel type DATAS
 			if ($returnVal == -99)
 				return 99;		// Demande de déconnexion		
 			
@@ -1159,11 +1201,12 @@ class MiniPavi {
 	/*************************************************
 	// Initialisation et execution (bloquante) de la commande d'appel d'un serveur exterieur par appel VoIP
 	// objCommand: commande
+	// objConfig : configuration
 	// tExtCnxKeys: clés d'autorisation des appels et connexions sortantes
 	// Retourne la valeur de retour de la commande d'appel (-1 si erreur, sinon 0)
 	*************************************************/
 
-	function addCommandConnectToExt($objCommand,$tConfigAsterisk,$tExtCnxKeys=array()) {
+	function addCommandConnectToExt($objCommand,$tConfigAsterisk,$objConfig,$tExtCnxKeys=array()) {
 		if (!is_array($tConfigAsterisk) || count($tConfigAsterisk)==0)
 			return false;
 		$key = @$objCommand->param->key;
@@ -1172,7 +1215,7 @@ class MiniPavi {
 		$number = @$objCommand->param->number;
 		if ($number=='')
 			return false;
-		$r = AstAMI::startCall($number,getmypid(),$this,(int)@$objCommand->param->RX,(int)@$objCommand->param->TX,$tConfigAsterisk);
+		$r = AstAMI::startCall($number,getmypid(),$this,(int)@$objCommand->param->RX,(int)@$objCommand->param->TX,$tConfigAsterisk,$objConfig);
 		$this->tLastData=time();
 		return $r;
 	}
@@ -1182,12 +1225,13 @@ class MiniPavi {
 	/*************************************************
 	// Initialisation et execution (bloquante) de la commande de connexion à un serveur via telnet
 	// objCommand: commande
+	// objConfig : configuration
 	// tExtCnxKeys: clés d'autorisation des appels et connexions sortantes
 	// $requestedUrl: Url du script ayant demandé cette commande	
 	// Retourne la valeur de retour de la commande de connexion (-1 si erreur, sinon 0)	
 	*************************************************/
 
-	function addCommandConnectToTln($objCommand,$tExtCnxKeys=array(),$requestedUrl='') {
+	function addCommandConnectToTln($objCommand,$objConfig,$tExtCnxKeys=array(),$requestedUrl='') {
 		$host = trim(@$objCommand->param->host);
 		if ($host=='')
 			return false;
@@ -1215,7 +1259,7 @@ class MiniPavi {
 		$startSeq = stripcslashes(trim(@$objCommand->param->startseq));		
 		
 		$this->sendToMainProc('setinfos',array('infos'=>"TELNETO $host"));
-		$r = TelnetConnect::linkTo($host,$this,$echo,$case,$startSeq);
+		$r = TelnetConnect::linkTo($host,$this,$objConfig,$echo,$case,$startSeq);
 		$this->sendToMainProc('setinfos',array('infos'=>''));
 		$this->tLastData=time();
 		return $r;
@@ -1224,13 +1268,14 @@ class MiniPavi {
 	/*************************************************
 	// Initialisation et execution (bloquante) de la commande de connexion à un serveur via Ws
 	// objCommand: commande
-	// myHost : adresse client (moi)
+	// objConfig : configuration
 	// tExtCnxKeys: clés d'autorisation des appels et connexions sortantes
 	// $requestedUrl: Url du script ayant demandé cette commande
 	// Retourne la valeur de retour de la commande de connexion (-1 si erreur, sinon 0)	
 	*************************************************/
 
-	function addCommandConnectToWs($objCommand,$myHost,$tExtCnxKeys=array(),$requestedUrl='') {
+	function addCommandConnectToWs($objCommand,$objConfig,$tExtCnxKeys=array(),$requestedUrl='') {
+		$myHost=$objConfig->host;
 		$host = trim(@$objCommand->param->host);
 		if ($host=='' || $myHost=='')
 			return false;
@@ -1260,7 +1305,7 @@ class MiniPavi {
 		$case = trim(@$objCommand->param->case);		
 		$proto = trim(@$objCommand->param->proto);		
 		$this->sendToMainProc('setinfos',array('infos'=>"WSTO $host $path"));
-		$r = WSConnect::linkTo($myHost,$host,$this,$path,$echo,$case,$proto);
+		$r = WSConnect::linkTo($myHost,$host,$this,$objConfig,$path,$echo,$case,$proto);
 		$this->sendToMainProc('setinfos',array('infos'=>''));
 		$this->tLastData=time();
 		return $r;
@@ -1332,6 +1377,69 @@ class MiniPavi {
 			$this->timeout=$t*60;
 			return;
 		}
+	}
+	
+	/*************************************************
+	// Execution (bloquante) de la commande de génération d'un png de capture d'écran préalablement sauvegardée
+	// objCommand: commande
+	// objConfig: configuration
+	// Retourne le png ou false si erreur
+	*************************************************/
+
+	function addCommandGetScreen($objCommand,$objConfig) {
+		$seq = @$objCommand->param->seq;
+		if ($seq=="" || $objConfig->viewer=='' ||  $objConfig->host=='' || $objConfig->hlbrowser=='') 
+			return false;
+		
+		
+		$fileName = $objConfig->recordsPath.'rec-'.$this->uniqueId.'-'.$seq.'.vdt';
+		if (!file_exists($fileName)) 
+			return false;
+		
+		$color = (int)@$objCommand->param->color;
+		if ($color==1)
+			$color="true";
+		else $color="false";
+		
+		if ((int)@$objCommand->param->minitel == 1)
+			$minitel = "&minitel=1";
+		else $minitel = '';
+		
+		if ($objConfig->wssPort>0) {
+			$proto='wss';
+			$port =  $objConfig->wssPort;
+		} else {
+			$proto='ws';
+			$port =  $objConfig->wsPort;
+		}
+		$url = $objConfig->viewer."?speed=0&color=".$color."&base=1".$minitel."&nowebmedia=1&gw=".$proto."%3A%2F%2F".$objConfig->host."%3A".$port."%2F%3Fstreamuniqueid%3D".$this->uniqueId."%26seq%3D".$seq;
+		$image = "tmp/".$this->uniqueId.rand(1111,9999).".png";
+		$cmd = $objConfig->hlbrowser;
+		$cmd = str_replace("%IMAGEFILE%",$image,$cmd);
+		$cmd = str_replace("%URL%",$url,$cmd);
+		if (exec($cmd)===false) {
+			return false;
+		}
+		$data = file_get_contents($image);
+		unlink($image);
+		return $data;
+	}
+	
+	/*************************************************
+	// Retourne la liste des captures d'écrans préalablement sauvegardées
+	// objCommand: commande
+	// objConfig: configuration
+	// Retourne la liste
+	*************************************************/
+	
+	function addCommandGetScreenList($objCommand,$objConfig) {
+		$r = array();
+		$t = $this->listScreenBuffers($objConfig->recordsPath);
+		foreach($t as $k=>$v) {
+			$r[$k]['date']=$v['date'];
+			$r[$k]['seq']=$v['seq'];
+		}
+		return $r;
 	}
 
 	/*************************************************
@@ -1716,7 +1824,7 @@ class MiniPavi {
 	}
 
 	/*************************************************
-	// Efface tous les fichiers pour l'enreegistrement local de la session
+	// Efface tous les fichiers pour l'enreegistrement local de la session et des buffers écran
 	*************************************************/
 	
 	function deleteAllLocalRecordings($recordsFilePath) {
@@ -1738,10 +1846,12 @@ class MiniPavi {
 	// Retourne les données si ok, sinon false
 	*************************************************/
 	
-	function getStreamFromRecording($recordsFilePath,$uniqueId) {
+	function getStreamFromRecording($recordsFilePath,$uniqueId,$seq='') {
 		if ($recordsFilePath=='') 
 			return;
-		$fileName = $recordsFilePath.'rec-'.$uniqueId.'.vdt';
+		if ($seq!='')
+			$seq='-'.$seq;
+		$fileName = $recordsFilePath.'rec-'.$uniqueId.$seq.'.vdt';
 		$datas = file_get_contents($fileName);
 		if ($datas == false) 
 			return false;
@@ -1761,6 +1871,80 @@ class MiniPavi {
 	}
 	
 
+	/************************************************
+	// Sauvegarde le dernier écran affiché
+	// On considère qu'un écran commence lors de l'effacement de celui-ci
+	***********************************************/
+	
+	function saveScreenBuffer($recordsFilePath) {
+		if ($recordsFilePath=='') 
+			return false;
+		$fileName = $recordsFilePath.'rec-'.$this->uniqueId.'-'.time().'.vdt';
+		$f = fopen($fileName,'w');
+		if (!$f) {
+			return false;
+		}
+		fwrite($f,$this->screenBuffer);
+		fclose($f);
+		return true;
+	}
+	
+	
+	/*************************************************
+	// Efface tous les fichiers des sauvergades du screen buffer
+	*************************************************/
+	
+	function deleteAllScreenBuffers($recordsFilePath) {
+		if ($recordsFilePath=='') 
+			return;
+		$tFiles = array_diff(scandir($recordsFilePath), array('..', '.'));	
+		foreach($tFiles as $file) {
+			if (preg_match('/rec-(.*)-(.*)\.vdt/', $file)) {
+				trigger_error ("[MiniPavi-class] Suppression de ".$recordsFilePath.$file);			
+				unlink($recordsFilePath.$file);
+			}
+		}
+	}
+
+	/*************************************************
+	// Efface tous les fichiers des sauvergades du screen buffer pour cette session
+	*************************************************/
+	
+	function deleteScreenBuffers($recordsFilePath) {
+		if ($recordsFilePath=='') 
+			return;
+		$tFiles = array_diff(scandir($recordsFilePath), array('..', '.'));	
+		foreach($tFiles as $file) {
+			if (preg_match('/rec-'.$this->uniqueId.'-(.*)\.vdt/', $file)) {
+				trigger_error ("[MiniPavi-class] Suppression de ".$recordsFilePath.$file);			
+				unlink($recordsFilePath.$file);
+			}
+		}
+	}
+
+	/*************************************************
+	// Retourne la liste des enregistrements de buffers pour cette session
+	*************************************************/
+	
+	function listScreenBuffers($recordsFilePath) {
+		if ($recordsFilePath=='') 
+			return array();
+		$i=0;
+		$fList=array();
+		$tFiles = array_diff(scandir($recordsFilePath), array('..', '.'));	
+		foreach($tFiles as $file) {
+			if (preg_match('/rec-'.$this->uniqueId.'-(.*)\.vdt/', $file)) {
+				$fList[$i]['name'] = $recordsFilePath.$file;
+				$fList[$i]['date'] = filemtime($recordsFilePath.$file);
+				preg_match('/^rec-\d+-(\d+)\.vdt$/', $file, $m);
+				$fList[$i]['seq'] = $m[1];
+				$i++;
+			}
+		}
+		return $fList;
+	}
+	
+	
 	/************************************************
 	// Arrête l'économiseur d'écran
 	***********************************************/
