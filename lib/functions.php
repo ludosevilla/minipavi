@@ -271,6 +271,7 @@ function onStop() {
 	global $tSocketsSer;
 	global $objConfig;
 	
+
 	if ($typeProc == TYPE_PROC_VISUWEB)
 		return;
 	$pid=getmypid();
@@ -370,7 +371,7 @@ function onChildStop($signal) {
 							}
 						}
 						$tObjClient[$k]->stopLocalRecoding();
-						
+						$tObjClient[$k]->deleteScreenBuffers($objConfig->recordsPath);						
 						if ($tObjClient[$k]->inCnx->getDirection() == 'IN') {
 							$o = new Stats($objConfig->statsPath);
 							$o->addStats($tObjClient[$k]->tCnx,$tObjClient[$k]->tLastAction,$tObjClient[$k]->inCnx->getTypeSocket());
