@@ -1,8 +1,7 @@
 <?php
-if (isset($_REQUEST['minitel'])) {
-	$query = $_SERVER['QUERY_STRING'];
-	header('Location: indexminitel.php'.($query ? '?' . $query : ''));
-	exit;	
+if (isset($_REQUEST['sleep'])) {
+		sleep((int)$_REQUEST['sleep']);
+		exit;
 }
 if (!isset($_REQUEST['gw'])) {
 		// Ligne à modifier en indiquant l'adresse de votre passerelle (et port) 
@@ -10,10 +9,6 @@ if (!isset($_REQUEST['gw'])) {
 		//////////////////////////////////////////////////////////
 } else {
 		$gw = $_REQUEST['gw'];
-}
-if (isset($_REQUEST['sleep'])) {
-		sleep((int)$_REQUEST['sleep']);
-		exit;
 }
 
 if (!isset($_REQUEST['url'])) {
@@ -24,7 +19,6 @@ if (!isset($_REQUEST['url'])) {
 if (isset($_REQUEST['base'])) 
 	$base = true;
 else $base = false;
-
 ?>
 
 <!DOCTYPE html>
@@ -34,12 +28,10 @@ else $base = false;
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta http-equiv="Access-Control-Allow-Origin" content="*">
-    <title>Emulateur Minitel</title>
-    <link rel="stylesheet" href="css/minitel-keyboard.css" />
+    <title>-= Emulateur Minitel =-</title>
+    <link rel="stylesheet" href="css/minitel-real-viewer.css" />
 	<link rel="stylesheet" href="css/minitel-minipavi-webmedia.css" />
-	<link rel="stylesheet" href="css/crt.css" />
-	
-		
+	<link rel="stylesheet" href="css/crt.css" /> 
     <meta name="keywords" content="MiniPavi, minitel, vintage, années 80, technologie, videotex, stum1b, teletel, 3615" />
     <meta name="description" content="Créez votre services Minitel facilement! Voyagez dans le passé et aidez à la sauvergarde du patrimoine technologique !" />
 	<meta name="author" content="Jean-arthur Silve" />	
@@ -48,105 +40,58 @@ else $base = false;
 	<meta property="og:description" content="Créez votre services Minitel facilement! Voyagez dans le passé et aidez à la sauvergarde du patrimoine technologique !">
     <meta property="og:title" content="Accueil service MiniPAVI">
 	<meta property="og:url" content="http://www.minipavi.fr">
-
   </head>
   <body>
-    <div>
+    <div id="minitel-viewer">
 	<br/>
-	
 	<x-minitel id="emul-1" data-socket="<?php echo $url;?>"
-
                  data-speed="1200"
                  data-color="true">
-		
-		<div id="oldeffect" class="minitel-oldeffect-off"   >
+			<div class="minitel-wrapper"> 
 			<canvas class="minitel-screen" data-minitel="screen"></canvas>
 			<canvas class="minitel-cursor" data-minitel="cursor"></canvas>
-			<div id="scanlines" class="minitel-scanlines"></div>
-			<div id="crt" class="minitel-crt-off"></div>
 		</div>
-		
-		
-		<?php
-		if ($base) {
-		?>
-		<div style="display:none">
-		<?php } ?>
-		<import src="import/minitel-minipavi-webmedia.html"></import>		
-        <import src="import/minitel-keyboard.html"></import>
-		<?php
-		if ($base) {
-		?>
-		</div>
-		<?php } ?>
-		
-		
-		<?php
-		if (!$base) {
-		?>
-		
-		<br/>
-
-		<div style="display:flex;justify-content: space-evenly;">
-		<div class="checkbox-wrapper-14">
-		  <input id="oldminitelSw" type="checkbox" class="switch" onchange="oldMinitelChange('oldeffect','crt',this.checked);">
-		  <label for="oldminitelSw">Minitel fatigué &#128577;</label>
-		</div>
-		<div class="checkbox-wrapper-14">
-		  <input id="scanlinesSw" type="checkbox" class="switch" onchange="scanlinesChange('scanlines',this.checked);" checked>
-		  <label for="scanlinesSw">Scanlines</label>
-		</div>
-		</div>
-		
-		<font  style="font-size:14px;color:White;font-family:Arial,Helvetica">
-		<br/><code><?php echo $url;?></code><br/><br/>
-		<?php if (!isset($_REQUEST['gw'])) { ?>
-			Après la connexion à un service, "Cnx/fin" pour revenir à la page d'accueil MiniPavi.
-			<br/>
-			(sauf en cas d'accès direct à un service)
-			<br/><br/>
-		<?php }?>
-		Plus d'infos sur MiniPAVI - <a href="https://www.minipavi.fr/" style="color:white;" target="_blank">https://www.minipavi.fr/</a>
-		<br/>Emulateur Minitel Frédéric BISSON (version modifiée MiniPavi) - <a href="https://minitel.cquest.org/" style="color:white;" target="_blank">https://minitel.cquest.org/</a>
-		<br/><br/>
-		
-		</font>
-		<?php } else { ?>
-			<font  style="font-size:14px;color:White;font-family:Arial,Helvetica">
-				Plus d'infos sur MiniPAVI - <a href="https://www.minipavi.fr/" style="color:white;" target="_blank">https://www.minipavi.fr/</a>
-			</font>
-		<?php } ?>
-		
+			
         <audio class="minitel-beep" data-minitel="beep">
           <source src="sound/minitel-bip.mp3" type="audio/mpeg"/>
           Too bad, your browser does not support HTML5 audio or mp3 format.
         </audio>      
-
-
-
+		<div id="minitel-glass"></div>
+		<div  style="<?php if ($base) { ?>display:none;<?php }?>position:absolute;top:0;margin:auto;background-color:black;width:25%;border-radius:8px;padding:10px;margin-left:10px;margin-top:10px;">
+		<import src="import/minitel-keyboard.html"></import>
+		<import src="import/minitel-minipavi-webmedia.html"></import>	
+		</div>
+		
       </x-minitel>
-    </div>
+	  
+	 </div>
+	  
+	  
+	  
+	  
+		<?php
+		if (!$base) {
+		?>
+		<div style="grid-row: 2;">
+		<br/>
 
-	<script>
-	function oldMinitelChange(id,id2, checked) {
-		var e1 = document.getElementById(id);
-		var e2 = document.getElementById(id2);
-		if (checked) {
-			e1.className='minitel-oldeffect';
-			e2.className='minitel-crt';
-		} else { 
-			e1.className='minitel-oldeffect-off';
-			e2.className='minitel-crt-off';
-		}
-	}
-	function scanlinesChange(id, checked) {
-		var e = document.getElementById(id);
-		if (checked)
-			e.className='minitel-scanlines';
-		else e.className='minitel-scanlines-off';
-	}
-	
-	</script>
+		<div style="max-width:1000px; margin:40px auto; padding:20px; border:2px solid #da33e2; text-align:center; font-family:Arial, sans-serif; background-color:white; box-shadow:inset 0 0 0 1px #d3d3d3; border-radius:8px;">		
+			<code><?php echo $url;?></code><br/><br/>
+			<?php if (!isset($_REQUEST['gw'])) { ?>
+				Après la connexion à un service, "Cnx/fin" pour revenir à la page d'accueil MiniPavi.
+				<br/>
+				(sauf en cas d'accès direct à un service)
+				<br/><br/>
+			<?php }?>
+			Plus d'infos sur MiniPAVI
+			<br/><a href="https://www.minipavi.fr/" style="color:#da33e2;" target="_blank">https://www.minipavi.fr/</a>
+			<br/>Emulateur Minitel Frédéric BISSON (version modifiée MiniPavi)
+			<br/><a href="https://minitel.cquest.org/" style="color:#da33e2;" target="_blank">https://minitel.cquest.org/</a>
+		</div>
+		<?php } ?>
+	  </div>
+    
+
 
     <script src="library/generichelper/generichelper.js"></script>
     <script src="library/import-html/import-html.js"></script>
@@ -175,7 +120,7 @@ else $base = false;
 	<?php
 	if ($base) {
 	?>
-	<img src="index.php?sleep=2" style="width:0px; height:0px;" />
+	<img src="indexminitel.php?sleep=2" style="width:0px; height:0px;" />
 	<?php } ?>
 
 
