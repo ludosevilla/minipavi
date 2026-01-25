@@ -1,7 +1,7 @@
 "use strict"
 /**
  * @file minitel-emulator.js
- * @author Frédéric BISSON <zigazou@free.fr>
+ * @author Frédéric BISSON <zigazou@free.fr> / modifé Minipavi
  * @version 1.0
  */
 
@@ -266,13 +266,15 @@ Minitel.Emulator = class {
 
         this.timer = window.setInterval(
             () => {
-				if(this.keyboard.paused)  return
-                if(this.pause) return
+				if(this.keyboard) {
+					if(this.keyboard.paused)  return
+					if(this.pause) return
 
-                this.pause = true
-                this.sendChunk()
-                if(this.recordHandler) this.recordHandler(this.vdu.canvas, rate)
-                this.pause = false
+					this.pause = true
+					this.sendChunk()
+					if(this.recordHandler) this.recordHandler(this.vdu.canvas, rate)
+					this.pause = false
+				}
             },
             rate
         )
@@ -284,7 +286,7 @@ Minitel.Emulator = class {
      */
     send(items) {
         this.queue = this.queue.concat(items)
-		if(this.keyboard.save) 
+		if(this.keyboard && this.keyboard.save) 
 			this.keyboard.saveArr = this.keyboard.saveArr.concat(items)
     }
 
