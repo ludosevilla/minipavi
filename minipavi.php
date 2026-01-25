@@ -3,7 +3,7 @@
 /**
  * @file minipavi.php
  * @author Jean-arthur SILVE <contact@minipavi.fr>
- * @version 1.2 Novembre 2023 - Juillet 2025
+ * @version 1.2 Novembre 2023 - Décembre 2025
  *
  * MINI Point d'Accès VIdeotex
  * PHP 8.2 (CLI) version Unix
@@ -15,7 +15,7 @@
 mb_internal_encoding('utf-8');
 error_reporting(E_ERROR);
 
-define('PAVI_VER', '1.5');
+define('PAVI_VER', '1.6');
 
 define('CNX_TIMEOUT', 600);		// Période maximum d'inactivité avant deconnexion (secondes)(valeur par défaut)
 define('MAX_HISTO_CLIENT',30);	// Max historique clients (valeur par défaut)
@@ -214,6 +214,11 @@ if (!is_dir( $objConfig->recordsPath ) && !file_exists($objConfig->recordsPath))
 }		
 
 
+if (!is_dir('tmp/') && !file_exists('tmp/')) {
+	mkdir('tmp/');       
+}		
+
+
 if (isset($options['ipdbkey']))
 	$objConfig->ipDBKey = $options['ipdbkey'];
 
@@ -265,6 +270,12 @@ if ($objConfig->screenSaver== 'no') {
 	$objConfig->screenSaver = false;
 } else {
 	$objConfig->screenSaver = true;
+}
+
+if ($objConfig->screenShot== 'yes') {
+	$objConfig->screenShot = true;
+} else {
+	$objConfig->screenShot = false;
 }
 
 
@@ -348,6 +359,7 @@ if ($objConfig->recordsPath != '')
 else 
 	echo ("Emplacement des enregistrements de sessions: Inactif\n");
 
+
 if ($objConfig->ipDBKey!='') echo ("Clé AbuseIPDB: ".$objConfig->ipDBKey."\n");
 else echo ("Clé AbuseIPDB: **Aucune**\n");
 
@@ -394,7 +406,7 @@ declare(ticks = 1);
 function sigint()  { 
 	exit;  
 }  
-pcntl_async_signals(true);
+//pcntl_async_signals(true);
 pcntl_signal(SIGCHLD, "onChildStop");
 pcntl_signal(SIGINT, 'sigint');  
 pcntl_signal(SIGTERM, 'sigint'); 
@@ -406,6 +418,9 @@ $objMiniPaviM = new MiniPavi($objConfig->logPath);
 
 $objMiniPaviM->log("Démarrage...");
 $objMiniPaviM->mainPid = $mainPid;;
+
+
+$objMiniPaviM->deleteAllLocalRecordings($objConfig->recordsPath);
 
 // Pour Socket "WS"
 if ($objConfig->wsPort > 0) {
@@ -621,9 +636,13 @@ do {
 				
 				if (isset($tCnxParams['streamuniqueid'])) {	// Connexion pour lire une session préalablement enregistrée
 					$objMiniPavi->sendToMainProc('setdirection',array('direction'=>'--'));
-					$datas = $objMiniPavi->getStreamFromRecording($objConfig->recordsPath,$tCnxParams['streamuniqueid']);
+					if (isset($tCnxParams['streamuniqueid']))
+						$seq=$tCnxParams['seq'];
+					else $seq='';
+					$datas = $objMiniPavi->getStreamFromRecording($objConfig->recordsPath,$tCnxParams['streamuniqueid'],$seq);
 					if ($datas !== false) {
-						$datas.=MiniPavi::VDT_CUROFF.MiniPavi::VDT_POS.'@A'.MiniPavi::VDT_BGBLUE.' Fin de session'.MiniPavi::VDT_CLRLN;
+						if ($seq=='')
+							$datas.=MiniPavi::VDT_CUROFF.MiniPavi::VDT_POS.'@A'.MiniPavi::VDT_BGBLUE.' Fin de session'.MiniPavi::VDT_CLRLN;
 						$objMiniPavi->inCnx->send($datas,$objMiniPavi);
 					}
 					$objMiniPavi->inCnx->close();
@@ -795,7 +814,7 @@ do {
 		$objMiniPavi->addToBufferOut($vdt);
 		$fctn='CNX';
 	} else {	// $resType == InCnx::WS_READTYPE_DATAS
-		$objMiniPavi->receiveFromUser($datas,$fctn,$simulate);
+		$objMiniPavi->receiveFromUser($datas,$fctn,$objConfig,$simulate);
 		if ($fctn=='' && $objMiniPavi->bufferOut!='') {
 			$outDatas = $objMiniPavi->prepareSendToUser(false);
 			$objMiniPavi->inCnx->send($outDatas,$objMiniPavi);
@@ -863,6 +882,9 @@ do {
 					break;
 				case 4:
 					$fctn='DIRECTCALLENDED';	// Appel direct après appel VoIP terminé avec succès
+					break;
+				case 5:
+					$fctn='DATAS';	// Appel direct avec envoi de données (dans "datas") suite à une demande de la part du service
 					break;
 				case 99:
 					$fctn='FIN';				// Demande de deconnexion
