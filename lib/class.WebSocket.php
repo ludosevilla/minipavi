@@ -89,7 +89,7 @@ class WebSocket {
 			}
 		} 
 		
-		$secKey = @$headers['Sec-WebSocket-Key'];
+		$secKey = trim(@$headers['Sec-WebSocket-Key']);
 		$secAccept = base64_encode(pack('H*', sha1($secKey . '258EAFA5-E914-47DA-95CA-C5AB0DC85B11')));
 		
 		$buffer = "HTTP/1.1 101 Web Socket Protocol Handshake\r\n";
@@ -97,7 +97,7 @@ class WebSocket {
 		$buffer.= "Connection: Upgrade\r\n";
 		$buffer.= "WebSocket-Origin: ".$ServerAdress."\r\n";
 		$buffer.= "WebSocket-Location: ws://".$ServerAdress.':'.$ServerPort."/\r\n";
-		$buffer.= "Sec-WebSocket-Accept:$secAccept\r\n\r\n";
+		$buffer.= "Sec-WebSocket-Accept: $secAccept\r\n\r\n";
 
 
 		fwrite($socket,$buffer,strlen($buffer));
