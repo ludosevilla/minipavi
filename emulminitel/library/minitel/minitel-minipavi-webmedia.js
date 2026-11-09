@@ -23,6 +23,9 @@ tag.appendChild(tag2);
 var firstDivTag = document.getElementsByTagName('div')[0];
 firstDivTag.parentNode.insertBefore(tag, firstDivTag);
 
+document.addEventListener('contextmenu', function(e) {
+	e.preventDefault();
+});
 
 /**
  * @namespace Minitel
