@@ -23,7 +23,7 @@
 		firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 	</script>
 	<div style="display:none">
-	  <script src="https://geo.dailymotion.com/player.js"></script>
+		<script src="https://geo.dailymotion.com/player/x8lr5.js"></script>
 	</div>
 	
 	<script src="webmedia.js"></script>
