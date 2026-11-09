@@ -18,7 +18,7 @@ firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 var tag = document.createElement('div');
 tag.style = "display:none";
 var tag2 = document.createElement('script');
-tag2.src = "https://geo.dailymotion.com/player.js";
+tag2.src = "https://geo.dailymotion.com/player/x8lr5.js";
 tag.appendChild(tag2);
 var firstDivTag = document.getElementsByTagName('div')[0];
 firstDivTag.parentNode.insertBefore(tag, firstDivTag);
