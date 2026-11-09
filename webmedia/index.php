@@ -51,7 +51,7 @@
 		<audio id="audioPlayer" controls autoplay></audio>
 		<div id="youtubePlayer"></div>
 		<div id="dmPlayer" style="max-height:315px;"></div>
-		<video id="videoPlayer" controls playsinline autoplay allow="fullscreen" style="max-width: 100%;height: auto;display:block;"></video>			
+		<video id="videoPlayer" controls playsinline autoplay allow="fullscreen" preload="metadata" style="max-width: 100%;height: auto;display:block;"></video>			
 		<img id="imgViewer"></img>
 		<button id="linkButton" data-filename=""></button>
 	
